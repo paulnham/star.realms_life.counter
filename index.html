@@ -120,23 +120,6 @@
         </div>
       </div>
 
-      <!-- Combat Layout Selector -->
-      <div class="mb-6">
-        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-          HUD Layout Mode
-        </label>
-        <div class="grid grid-cols-2 gap-3">
-          <button onclick="setLayoutStyle('standard')" id="btn-layout-standard" class="py-3 px-4 rounded-xl font-bold transition-all duration-200 border flex items-center justify-center gap-2 bg-gradient-to-b from-cyan-500 to-blue-600 text-white border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-            <i data-lucide="layout-grid" class="w-4 h-4"></i>
-            <span class="text-xs uppercase tracking-wider">Standard Grid</span>
-          </button>
-          <button onclick="setLayoutStyle('sideBySide')" id="btn-layout-sideBySide" class="py-3 px-4 rounded-xl font-bold transition-all duration-200 border flex items-center justify-center gap-2 bg-slate-950/60 hover:bg-slate-800/80 text-slate-300 border-slate-800">
-            <i data-lucide="columns" class="w-4 h-4"></i>
-            <span class="text-xs uppercase tracking-wider">Side-by-Side</span>
-          </button>
-        </div>
-      </div>
-
       <!-- Starting Authority Settings -->
       <div class="mb-6">
         <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
@@ -235,6 +218,18 @@
       <div class="flex items-center gap-2">
         <span class="text-xs font-black tracking-widest text-slate-400 uppercase hidden sm:inline hud-title">Star Realms</span>
         <span class="px-1.5 py-0.5 text-[9px] font-black uppercase rounded bg-slate-900 text-cyan-400 border border-cyan-500/20 tracking-wider">Combat Matrix active</span>
+        
+        <!-- Live Layout Quick Action Toggle -->
+        <div class="flex items-center bg-slate-900 rounded-lg p-0.5 border border-slate-850 ml-1.5 shrink-0">
+          <button onclick="setLayoutStyleLive('standard')" id="header-btn-layout-standard" class="p-1 px-2 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 text-cyan-400 bg-slate-950 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]">
+            <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+            <span class="hidden md:inline">Grid View</span>
+          </button>
+          <button onclick="setLayoutStyleLive('sideBySide')" id="header-btn-layout-sideBySide" class="p-1 px-2 rounded-md text-[10px] font-bold transition-all flex items-center justify-center gap-1 text-slate-400 hover:text-slate-200 hover:bg-slate-900/40 border border-transparent">
+            <i data-lucide="columns" class="w-3.5 h-3.5"></i>
+            <span class="hidden md:inline">Side-by-Side</span>
+          </button>
+        </div>
       </div>
 
       <!-- Header Controls -->
@@ -593,40 +588,61 @@
       renderSetupNameInputs();
     }
 
-    // Layout configuration setter
+    // Layout configuration setter (Kept for backwards compatibility)
     function setLayoutStyle(style) {
       state.layoutStyle = style;
       playSynth('click');
-      ['standard', 'sideBySide'].forEach(s => {
-        const btn = document.getElementById(`btn-layout-${s}`);
-        if (s === style) {
-          btn.className = "py-3 px-4 rounded-xl font-bold transition-all duration-200 border flex items-center justify-center gap-2 bg-gradient-to-b from-cyan-500 to-blue-600 text-white border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]";
-        } else {
-          btn.className = "py-3 px-4 rounded-xl font-bold transition-all duration-200 border flex items-center justify-center gap-2 bg-slate-950/60 hover:bg-slate-800/80 text-slate-300 border-slate-800";
-        }
-      });
     }
 
-    // Live layout option switcher
-    function toggleLayoutLive() {
-      state.layoutStyle = state.layoutStyle === 'standard' ? 'sideBySide' : 'standard';
+    // Live layout option swapper directly from Header Segmented Buttons
+    function setLayoutStyleLive(style) {
+      state.layoutStyle = style;
       playSynth('click');
-      updateLayoutTogglesDOM();
+      updateLayoutVisuals();
       rebuildGridUI();
     }
 
-    // Update layout controllers
-    function updateLayoutTogglesDOM() {
+    // Live toggle option switcher (for Control Center Modal slider)
+    function toggleLayoutLive() {
+      state.layoutStyle = state.layoutStyle === 'standard' ? 'sideBySide' : 'standard';
+      playSynth('click');
+      updateLayoutVisuals();
+      rebuildGridUI();
+    }
+
+    // Master function to synchronize all UI indicators matching layout state
+    function updateLayoutVisuals() {
+      // 1. Sync Header Segmented Quick Buttons
+      const btnStandard = document.getElementById('header-btn-layout-standard');
+      const btnSideBySide = document.getElementById('header-btn-layout-sideBySide');
+      
+      if (btnStandard && btnSideBySide) {
+        if (state.layoutStyle === 'standard') {
+          btnStandard.className = "p-1 px-2 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 text-cyan-400 bg-slate-950 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]";
+          btnSideBySide.className = "p-1 px-2 rounded-md text-[10px] font-bold transition-all flex items-center justify-center gap-1 text-slate-400 hover:text-slate-200 hover:bg-slate-900/40 border border-transparent";
+        } else {
+          btnStandard.className = "p-1 px-2 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 text-slate-400 hover:text-slate-200 hover:bg-slate-900/40 border border-transparent";
+          btnSideBySide.className = "p-1 px-2 rounded-md text-[10px] font-bold transition-all flex items-center justify-center gap-1 text-cyan-400 bg-slate-950 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]";
+        }
+      }
+
+      // 2. Sync Control Center Modal Toggle Dot
       const dot = document.getElementById('layout-control-dot');
       const toggle = document.getElementById('layout-control-toggle');
-      if (!dot || !toggle) return;
-      if (state.layoutStyle === 'sideBySide') {
-        dot.className = "w-4 h-4 rounded-full bg-white translate-x-5 transition-transform duration-200";
-        toggle.className = "w-10 h-5 rounded-full p-0.5 bg-cyan-500 transition-colors duration-200";
-      } else {
-        dot.className = "w-4 h-4 rounded-full bg-white translate-x-0 transition-transform duration-200";
-        toggle.className = "w-10 h-5 rounded-full p-0.5 bg-slate-850 transition-colors duration-200";
+      if (dot && toggle) {
+        if (state.layoutStyle === 'sideBySide') {
+          dot.className = "w-4 h-4 rounded-full bg-white translate-x-5 transition-transform duration-200";
+          toggle.className = "w-10 h-5 rounded-full p-0.5 bg-cyan-500 transition-colors duration-200";
+        } else {
+          dot.className = "w-4 h-4 rounded-full bg-white translate-x-0 transition-transform duration-200";
+          toggle.className = "w-10 h-5 rounded-full p-0.5 bg-slate-850 transition-colors duration-200";
+        }
       }
+    }
+
+    // Keep function reference pointing to master update visuals to prevent reference breaks
+    function updateLayoutTogglesDOM() {
+      updateLayoutVisuals();
     }
 
     function setStartingAuthority(val) {
@@ -821,7 +837,7 @@
       }
 
       // Sync visual toggles
-      updateLayoutTogglesDOM();
+      updateLayoutVisuals();
 
       document.getElementById('control-modal').classList.remove('hidden');
     }
@@ -910,7 +926,10 @@
       // Clear previous state variables
       state.floaters = {};
       state.logs = [];
-      addLog(`Skirmish initiated in Sector ${Math.floor(Math.random() * 900) + 100}. Initial authority assigned: ${state.startingAuthority}.`);
+      addLog("Skirmish initiated in Sector " + (Math.floor(Math.random() * 900) + 100) + ". Initial authority assigned: " + state.startingAuthority + ".");
+
+      // Synchronize Segmented Header Buttons
+      updateLayoutVisuals();
 
       // Draw Grid onto active screen
       rebuildGridUI();
@@ -963,30 +982,30 @@
             <div class="absolute inset-0 bg-[linear-gradient(rgba(18,24,38,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(18,24,38,0.15)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none z-0"></div>
 
             <!-- Faction Logo Watermark -->
-            ${faction.svg}
+            \${faction.svg}
 
             <!-- Card Header: Profile Info -->
             <div class="p-3 sm:p-4 flex items-center justify-between z-10 bg-slate-950/40 backdrop-blur-sm border-b border-slate-800/20">
               <div class="flex items-center gap-2 max-w-[60%]">
-                <div class="w-3 h-3 rounded-full ${faction.badgeBg} shadow-sm shrink-0 animate-pulse"></div>
+                <div class="w-3 h-3 rounded-full \${faction.badgeBg} shadow-sm shrink-0 animate-pulse"></div>
                 <input
                   type="text"
-                  value="${player.name}"
-                  onchange="renamePlayer('${player.id}', this.value)"
+                  value="\${player.name}"
+                  onchange="renamePlayer('\${player.id}', this.value)"
                   class="bg-transparent font-bold text-sm tracking-wide text-slate-100 hover:bg-slate-800/50 focus:bg-slate-850 focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded px-1.5 py-0.5 truncate w-full"
                   title="Rename Commander"
                   maxLength="16"
                 />
               </div>
               <span class="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800/60 font-extrabold truncate">
-                ${faction.name}
+                \${faction.name}
               </span>
             </div>
 
             <!-- Card Body: Main Numeric display -->
             <div class="flex-1 flex items-center justify-center relative p-2 z-10">
               <!-- Defeated Panel -->
-              <div id="defeated-${player.id}" class="${isDefeated ? '' : 'hidden'} absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center z-30">
+              <div id="defeated-\${player.id}" class="\${isDefeated ? '' : 'hidden'} absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center z-30">
                 <div class="p-3 bg-red-950/50 border border-red-500/40 rounded-full animate-bounce mb-2 text-red-500">
                   <i data-lucide="shield-alert" class="w-10 h-10"></i>
                 </div>
@@ -997,11 +1016,11 @@
               <!-- Authority indicators -->
               <div class="relative text-center select-none py-4">
                 <!-- Floating score change parent container -->
-                <div id="floater-container-${player.id}" class="absolute -top-6 left-1/2 -translate-x-1/2 w-32 h-12 pointer-events-none select-none"></div>
+                <div id="floater-container-\${player.id}" class="absolute -top-6 left-1/2 -translate-x-1/2 w-32 h-12 pointer-events-none select-none"></div>
 
                 <div class="text-7xl md:text-8xl font-black tracking-tighter tabular-nums drop-shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center justify-center">
-                  <span id="score-${player.id}" class="bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">
-                    ${player.authority}
+                  <span id="score-\${player.id}" class="bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">
+                    \${player.authority}
                   </span>
                 </div>
                 <p class="text-[9px] uppercase font-bold tracking-[0.2em] opacity-60 text-slate-400 mt-1">Mothership Authority</p>
@@ -1013,19 +1032,19 @@
               <!-- Outgoing Damage Options (Minus Values) -->
               <div class="grid grid-cols-3 gap-2 sm:gap-3">
                 <button
-                  onclick="modifyAuthority('${player.id}', -10)"
+                  onclick="modifyAuthority('\${player.id}', -10)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-red-950/40 hover:bg-red-900/50 border border-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
                 >
                   -10
                 </button>
                 <button
-                  onclick="modifyAuthority('${player.id}', -5)"
+                  onclick="modifyAuthority('\${player.id}', -5)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-red-950/40 hover:bg-red-900/50 border border-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
                 >
                   -5
                 </button>
                 <button
-                  onclick="modifyAuthority('${player.id}', -1)"
+                  onclick="modifyAuthority('\${player.id}', -1)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-red-950/40 hover:bg-red-900/50 border border-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
                 >
                   -1
@@ -1035,19 +1054,19 @@
               <!-- Incoming Repair Options (Positive values) -->
               <div class="grid grid-cols-3 gap-2 sm:gap-3">
                 <button
-                  onclick="modifyAuthority('${player.id}', 1)"
+                  onclick="modifyAuthority('\${player.id}', 1)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
                 >
                   +1
                 </button>
                 <button
-                  onclick="modifyAuthority('${player.id}', 5)"
+                  onclick="modifyAuthority('\${player.id}', 5)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
                 >
                   +5
                 </button>
                 <button
-                  onclick="modifyAuthority('${player.id}', 10)"
+                  onclick="modifyAuthority('\${player.id}', 10)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
                 >
                   +10
@@ -1064,8 +1083,8 @@
     function renamePlayer(playerId, newName) {
       state.players = state.players.map(p => {
         if (p.id === playerId) {
-          const refined = newName.trim() || `Commander ${playerId.split('-')[1]}`;
-          addLog(`Commander in ${FACTIONS[p.factionId].name} renamed to "${refined}"`);
+          const refined = newName.trim() || `Commander \${playerId.split('-')[1]}`;
+          addLog("Commander in " + FACTIONS[p.factionId].name + " renamed to \"" + refined + "\"");
           return { ...p, name: refined };
         }
         return p;
@@ -1094,23 +1113,23 @@
           triggerFloater(p, change);
 
           // Build log transaction record
-          addLog(`${p.name} (${FACTIONS[p.factionId].name}) adjusted authority by ${change > 0 ? '+' : ''}${change} (Result: ${nextScore})`);
+          addLog(p.name + " (" + FACTIONS[p.factionId].name + ") adjusted authority by " + (change > 0 ? '+' : '') + change + " (Result: " + nextScore + ")");
 
           // Defeat trigger check
           let isDefeated = p.defeated;
           if (nextScore === 0 && !p.defeated) {
             isDefeated = true;
             playSynth('defeat');
-            addLog(`💥 CRITICAL telemetry: ${p.name}'s mothership deck was annihilated!`);
+            addLog("💥 CRITICAL telemetry: " + p.name + "'s mothership deck was annihilated!");
           } else if (nextScore > 0 && p.defeated) {
             isDefeated = false;
           }
 
           // Direct DOM adjustments to optimize score frame performance
-          document.getElementById(`score-${p.id}`).innerText = nextScore;
+          document.getElementById(`score-\${p.id}`).innerText = nextScore;
           
-          const card = document.getElementById(`card-${p.id}`);
-          const defeatedPanel = document.getElementById(`defeated-${p.id}`);
+          const card = document.getElementById(`card-\${p.id}`);
+          const defeatedPanel = document.getElementById(`defeated-\${p.id}`);
           if (isDefeated) {
             card.classList.add('opacity-40', 'scale-[0.98]');
             defeatedPanel.classList.remove('hidden');
@@ -1130,7 +1149,7 @@
 
     // Trigger accumulating floaters above score digits
     function triggerFloater(player, amount) {
-      const container = document.getElementById(`floater-container-${player.id}`);
+      const container = document.getElementById(`floater-container-\${player.id}`);
       if (!container) return;
 
       // Accumulate rapidly inputted scores to prevent rendering block overlap
@@ -1144,10 +1163,10 @@
       // Construct dynamic visual element
       const el = document.createElement('div');
       const isPositive = nextSum >= 0;
-      el.className = `absolute left-1/2 -translate-x-1/2 font-black text-3xl tracking-wide select-none pointer-events-none drop-shadow-[0_0_12px_rgba(255,255,255,0.45)] animate-floatUp ${
+      el.className = `absolute left-1/2 -translate-x-1/2 font-black text-3xl tracking-wide select-none pointer-events-none drop-shadow-[0_0_12px_rgba(255,255,255,0.45)] animate-floatUp \${
         isPositive ? 'text-emerald-400' : 'text-red-500'
       }`;
-      el.innerText = `${isPositive ? '+' : ''}${nextSum}`;
+      el.innerText = `\${isPositive ? '+' : ''}\${nextSum}`;
       container.appendChild(el);
 
       // Erase tracking log after animation duration finishes
@@ -1170,8 +1189,8 @@
         state.phase = 'gameover';
         setTimeout(() => {
           playSynth('success');
-          addLog(`🏆 BATTLE FINISHED: Commander ${survivors[0].name} has conquered the sector!`);
-          showCustomAlert("Skirmish Concluded", `🏆 Victory! Commander ${survivors[0].name} has survived the cosmic engagement and established stellar dominance.`, false, () => {
+          addLog("🏆 BATTLE FINISHED: Commander " + survivors[0].name + " has conquered the sector!");
+          showCustomAlert("Skirmish Concluded", "🏆 Victory! Commander " + survivors[0].name + " has survived the cosmic engagement and established stellar dominance.", false, () => {
             // Keep combat screen open to view logs or allow restart
           });
         }, 600);
@@ -1179,7 +1198,7 @@
         state.phase = 'gameover';
         setTimeout(() => {
           playSynth('defeat');
-          addLog(`💥 DRAW: Mutual destruction. All stellar decks eliminated.`);
+          addLog("💥 DRAW: Mutual destruction. All stellar decks eliminated.");
           showCustomAlert("Sector Destroyed", "All commanders were annihilated in a mutual ship-to-ship blast cascade.", false, null);
         }, 600);
       }
