@@ -110,6 +110,16 @@
         </div>
       </div>
 
+      <!-- Commander Name Registries -->
+      <div class="mb-6">
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+          Commander Registries (Optional Names)
+        </label>
+        <div id="setup-names-container" class="space-y-3">
+          <!-- Populated dynamically via script -->
+        </div>
+      </div>
+
       <!-- Starting Authority Settings -->
       <div class="mb-6">
         <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
@@ -493,7 +503,43 @@
     // Init Page setup
     window.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
+      renderSetupNameInputs();
     });
+
+    // Populate Optional Player name input layout based on active pilot size settings
+    function renderSetupNameInputs() {
+      const container = document.getElementById('setup-names-container');
+      if (!container) return;
+      
+      const savedVals = [];
+      for (let i = 1; i <= 4; i++) {
+        const input = document.getElementById(`setup-name-p${i}`);
+        savedVals.push(input ? input.value : '');
+      }
+      
+      let html = '';
+      for (let i = 1; i <= state.playerCount; i++) {
+        const val = savedVals[i - 1] || '';
+        html += `
+          <div class="relative">
+            <input
+              type="text"
+              id="setup-name-p${i}"
+              value="${val}"
+              placeholder="Commander ${i}"
+              class="w-full py-2.5 px-3.5 rounded-xl text-sm bg-slate-950/60 border border-slate-800 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500 pl-10"
+              maxLength="16"
+            />
+            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+              <i data-lucide="user" class="w-4 h-4"></i>
+            </div>
+            <span class="absolute -top-2 right-4 px-1 bg-slate-900 text-[8px] font-bold text-slate-400 rounded uppercase">Pilot ${i}</span>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+      lucide.createIcons();
+    }
 
     // Option setters
     function setPlayerCount(num) {
@@ -514,6 +560,8 @@
       } else {
         f2fPanel.classList.add('hidden');
       }
+
+      renderSetupNameInputs();
     }
 
     function setStartingAuthority(val) {
@@ -656,7 +704,7 @@
         
         return `<div class="p-2.5 rounded border border-slate-800/40 bg-slate-900/60 flex gap-2.5 items-start ${textStyle}">
                   <span class="text-cyan-500/70 font-bold select-none shrink-0">${log.time}</span>
-                  <span class="leading-relaxed">${log.text}</span>
+                  <span class="leading-relaxed">{log.text}</span>
                 </div>`;
       }).join('');
     }
@@ -742,6 +790,19 @@
           document.getElementById('setup-screen').classList.remove('hidden');
           document.getElementById('combat-screen').classList.add('hidden');
           document.getElementById('control-modal').classList.add('hidden');
+
+          // Pre-populate Setup screen input boxes with existing Custom Names
+          renderSetupNameInputs();
+          for (let i = 1; i <= state.playerCount; i++) {
+            const input = document.getElementById(`setup-name-p${i}`);
+            if (input && state.players[i - 1]) {
+              const name = state.players[i - 1].name;
+              // Skip restoring default name formats so placeholder text isn't overwrote
+              if (name !== `Commander ${i}`) {
+                input.value = name;
+              }
+            }
+          }
         }
       });
     }
@@ -755,12 +816,23 @@
       document.body.classList.remove('overflow-y-auto');
       document.body.classList.add('overflow-hidden');
       
+      // Retrieve names entered in setup screen inputs
+      const customNames = [];
+      for (let i = 1; i <= state.playerCount; i++) {
+        const input = document.getElementById(`setup-name-p${i}`);
+        let name = input ? input.value.trim() : '';
+        if (!name) {
+          name = `Commander ${i}`;
+        }
+        customNames.push(name);
+      }
+
       // Initialize Player data entities
       state.players = Array.from({ length: state.playerCount }, (_, idx) => {
         const defaultFaction = factionKeys[idx % factionKeys.length];
         return {
           id: `p-${idx + 1}`,
-          name: `Commander ${idx + 1}`,
+          name: customNames[idx],
           authority: state.startingAuthority,
           factionId: defaultFaction,
           defeated: false
