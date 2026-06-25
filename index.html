@@ -1,0 +1,216 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2870
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <!DOCTYPE html>\
+<html lang="en">\
+<head>\
+  <meta charset="UTF-8" />\
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\
+  <title>Star Realms Life Counter</title>\
+  <style>\
+    body \{\
+      margin: 0;\
+      font-family: system-ui, sans-serif;\
+      background: #0b1020;\
+      color: white;\
+      min-height: 100vh;\
+      display: flex;\
+      flex-direction: column;\
+    \}\
+\
+    header \{\
+      text-align: center;\
+      padding: 16px;\
+      background: #111936;\
+      border-bottom: 2px solid #24345f;\
+    \}\
+\
+    h1 \{\
+      margin: 0;\
+      font-size: 1.5rem;\
+    \}\
+\
+    .game \{\
+      flex: 1;\
+      display: grid;\
+      grid-template-columns: 1fr 1fr;\
+    \}\
+\
+    .player \{\
+      display: flex;\
+      flex-direction: column;\
+      justify-content: center;\
+      align-items: center;\
+      gap: 18px;\
+      padding: 24px;\
+      border: 1px solid #24345f;\
+    \}\
+\
+    .player h2 \{\
+      margin: 0;\
+      font-size: 1.3rem;\
+    \}\
+\
+    .score \{\
+      font-size: clamp(4rem, 14vw, 9rem);\
+      font-weight: 800;\
+      line-height: 1;\
+    \}\
+\
+    .controls \{\
+      display: grid;\
+      grid-template-columns: repeat(3, 70px);\
+      gap: 10px;\
+    \}\
+\
+    button \{\
+      border: none;\
+      border-radius: 12px;\
+      padding: 14px;\
+      font-size: 1.1rem;\
+      font-weight: 700;\
+      color: white;\
+      background: #263a75;\
+      cursor: pointer;\
+    \}\
+\
+    button:hover \{\
+      background: #3652a5;\
+    \}\
+\
+    .damage \{\
+      background: #8b1e2d;\
+    \}\
+\
+    .damage:hover \{\
+      background: #b3293b;\
+    \}\
+\
+    .heal \{\
+      background: #1f7a43;\
+    \}\
+\
+    .heal:hover \{\
+      background: #279e56;\
+    \}\
+\
+    .toolbar \{\
+      display: flex;\
+      justify-content: center;\
+      align-items: center;\
+      gap: 12px;\
+      padding: 16px;\
+      background: #111936;\
+      border-top: 2px solid #24345f;\
+    \}\
+\
+    input \{\
+      width: 70px;\
+      padding: 10px;\
+      border-radius: 10px;\
+      border: none;\
+      font-size: 1rem;\
+      text-align: center;\
+    \}\
+\
+    .reset \{\
+      background: #555;\
+    \}\
+\
+    .reset:hover \{\
+      background: #777;\
+    \}\
+\
+    @media (max-width: 700px) \{\
+      .game \{\
+        grid-template-columns: 1fr;\
+      \}\
+\
+      .player \{\
+        min-height: 40vh;\
+      \}\
+    \}\
+  </style>\
+</head>\
+<body>\
+  <header>\
+    <h1>Star Realms Authority Counter</h1>\
+  </header>\
+\
+  <main class="game">\
+    <section class="player">\
+      <h2>Player 1</h2>\
+      <div class="score" id="score1">50</div>\
+      <div class="controls">\
+        <button class="damage" onclick="changeScore(1, -1)">\uc0\u8722 1</button>\
+        <button class="damage" onclick="changeScore(1, -5)">\uc0\u8722 5</button>\
+        <button class="damage" onclick="changeScore(1, -customAmount())">\uc0\u8722 X</button>\
+\
+        <button class="heal" onclick="changeScore(1, 1)">+1</button>\
+        <button class="heal" onclick="changeScore(1, 5)">+5</button>\
+        <button class="heal" onclick="changeScore(1, customAmount())">+X</button>\
+      </div>\
+    </section>\
+\
+    <section class="player">\
+      <h2>Player 2</h2>\
+      <div class="score" id="score2">50</div>\
+      <div class="controls">\
+        <button class="damage" onclick="changeScore(2, -1)">\uc0\u8722 1</button>\
+        <button class="damage" onclick="changeScore(2, -5)">\uc0\u8722 5</button>\
+        <button class="damage" onclick="changeScore(2, -customAmount())">\uc0\u8722 X</button>\
+\
+        <button class="heal" onclick="changeScore(2, 1)">+1</button>\
+        <button class="heal" onclick="changeScore(2, 5)">+5</button>\
+        <button class="heal" onclick="changeScore(2, customAmount())">+X</button>\
+      </div>\
+    </section>\
+  </main>\
+\
+  <div class="toolbar">\
+    <label for="amount">X:</label>\
+    <input id="amount" type="number" value="10" min="1" />\
+    <button class="reset" onclick="resetGame()">Reset</button>\
+  </div>\
+\
+  <script>\
+    const STARTING_AUTHORITY = 50;\
+\
+    let scores = \{\
+      1: STARTING_AUTHORITY,\
+      2: STARTING_AUTHORITY\
+    \};\
+\
+    function changeScore(player, amount) \{\
+      scores[player] += amount;\
+      document.getElementById(`score$\{player\}`).textContent = scores[player];\
+\
+      if (scores[player] <= 0) \{\
+        document.getElementById(`score$\{player\}`).style.color = "#ff4d4d";\
+      \} else \{\
+        document.getElementById(`score$\{player\}`).style.color = "white";\
+      \}\
+    \}\
+\
+    function customAmount() \{\
+      const value = Number(document.getElementById("amount").value);\
+      return Number.isFinite(value) && value > 0 ? value : 1;\
+    \}\
+\
+    function resetGame() \{\
+      scores[1] = STARTING_AUTHORITY;\
+      scores[2] = STARTING_AUTHORITY;\
+\
+      document.getElementById("score1").textContent = scores[1];\
+      document.getElementById("score2").textContent = scores[2];\
+\
+      document.getElementById("score1").style.color = "white";\
+      document.getElementById("score2").style.color = "white";\
+    \}\
+  </script>\
+</body>\
+</html>}
