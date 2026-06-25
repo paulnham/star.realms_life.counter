@@ -207,10 +207,12 @@
         </div>
 
         <!-- Face to Face Rotation Button (Grouped on Left, only visible in 2p mode) -->
-        <button id="header-f2f-btn" onclick="toggleFaceToFace()" class="p-1 px-2.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1.5 hidden" title="Invert Player 1 for table-play">
-          <i data-lucide="arrow-up-down" class="w-3.5 h-3.5"></i>
-          <span class="hidden md:inline">F2F Mode</span>
-        </button>
+        <div id="header-f2f-wrapper" class="flex items-center bg-slate-900 rounded-lg p-0.5 border border-slate-850 ml-1.5 shrink-0 hidden">
+          <button id="header-f2f-btn" onclick="toggleFaceToFace()" class="p-1 px-2.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1.5" title="Invert Player 1 for table-play">
+            <i data-lucide="arrow-up-down" class="w-3.5 h-3.5"></i>
+            <span class="hidden md:inline">F2F Mode</span>
+          </button>
+        </div>
       </div>
 
       <!-- Header Controls -->
@@ -353,7 +355,7 @@
       <h3 class="text-lg font-bold text-slate-100 uppercase tracking-wider mb-2" id="alert-title">System Alert</h3>
       <p class="text-xs text-slate-300 leading-relaxed mb-6" id="alert-message">Notice message goes here.</p>
       <div class="flex gap-2 justify-center">
-        <button onclick="hideCustomAlert(false)" id="alert-cancel-btn" class="hidden px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-bold uppercase tracking-wider">Cancel</button>
+        <button onclick="hideCustomAlert(false)" id="alert-cancel-btn" class="hidden px-4 py-2 rounded-lg bg-slate-850 text-slate-300 text-xs font-bold uppercase tracking-wider">Cancel</button>
         <button onclick="hideCustomAlert(true)" class="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-bold uppercase tracking-wider shadow-lg">Confirm</button>
       </div>
     </div>
@@ -659,17 +661,18 @@
       }
 
       // 3. Sync Face-to-Face Header Quick Button (Now on the Left Side)
+      const f2fWrapper = document.getElementById('header-f2f-wrapper');
       const f2fBtn = document.getElementById('header-f2f-btn');
-      if (f2fBtn) {
+      if (f2fWrapper && f2fBtn) {
         if (state.playerCount === 2) {
-          f2fBtn.classList.remove('hidden');
+          f2fWrapper.classList.remove('hidden');
           if (state.faceToFace) {
-            f2fBtn.className = "p-1 px-2.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1.5 text-cyan-400 bg-slate-900 border border-cyan-500/50 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]";
+            f2fBtn.className = "p-1 px-2.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1.5 text-cyan-400 bg-slate-950 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]";
           } else {
-            f2fBtn.className = "p-1 px-2.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1.5 text-slate-400 hover:text-slate-200 bg-slate-900 border border-slate-850 hover:border-slate-700";
+            f2fBtn.className = "p-1 px-2.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-900/40 border border-transparent";
           }
         } else {
-          f2fBtn.classList.add('hidden');
+          f2fWrapper.classList.add('hidden');
         }
       }
 
