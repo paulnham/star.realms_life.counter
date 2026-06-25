@@ -150,31 +150,6 @@
         </div>
       </div>
 
-      <!-- Face to Face Toggle for 2 players -->
-      <div id="f2f-panel" class="mb-6 p-4 rounded-xl bg-slate-950/40 border border-slate-800 flex items-center justify-between">
-        <div>
-          <h4 class="text-sm font-bold text-slate-300">Face-to-Face Mode</h4>
-          <p class="text-xs text-slate-400">Inverts Commander 1's HUD for players sitting across a table.</p>
-        </div>
-        <button id="f2f-toggle" onclick="toggleFaceToFace()" class="w-12 h-6 rounded-full p-1 bg-cyan-500 transition-colors duration-200">
-          <div id="f2f-dot" class="w-4 h-4 rounded-full bg-white translate-x-6 transition-transform duration-200"></div>
-        </button>
-      </div>
-
-      <!-- Tactical SFX configuration toggle -->
-      <div class="mb-8 p-4 rounded-xl bg-slate-950/40 border border-slate-800 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <i data-lucide="volume-2" id="sound-icon" class="text-cyan-400"></i>
-          <div>
-            <h4 class="text-sm font-bold text-slate-300">Tactical Synth Soundscapes</h4>
-            <p class="text-xs text-slate-400">Interactive telemetry, hull breach explosions & lasers.</p>
-          </div>
-        </div>
-        <button id="sound-toggle" onclick="toggleSound()" class="w-12 h-6 rounded-full p-1 bg-cyan-500 transition-colors duration-200">
-          <div id="sound-dot" class="w-4 h-4 rounded-full bg-white translate-x-6 transition-transform duration-200"></div>
-        </button>
-      </div>
-
       <!-- initiative generator panel -->
       <div class="mb-8 p-4 rounded-xl bg-slate-950/80 border border-dashed border-slate-800 flex flex-col items-center text-center">
         <h4 class="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-2 flex items-center gap-1">
@@ -234,21 +209,28 @@
 
       <!-- Header Controls -->
       <div class="flex items-center gap-2">
-        <button onclick="openLogs()" class="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-all flex items-center gap-1.5 text-xs font-bold">
+        <!-- Face to Face Rotation Button (Widescreen Tablet/Phone focus) -->
+        <button id="header-f2f-btn" onclick="toggleFaceToFace()" class="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-all flex items-center gap-1.5 text-xs font-bold hidden" title="Invert Player 1 for table-play">
+          <i data-lucide="arrow-up-down" class="w-4 h-4"></i>
+          <span class="hidden md:inline">F2F Mode</span>
+        </button>
+
+        <button onclick="openLogs()" class="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-all flex items-center gap-1.5 text-xs font-bold" title="View log telemetry">
           <i data-lucide="history" class="w-4 h-4"></i>
-          <span class="hidden md:inline">Combat Logs</span>
+          <span class="hidden md:inline">Logs</span>
         </button>
 
-        <button onclick="toggleSound()" class="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-all">
-          <i data-lucide="volume-2" id="header-sound-icon" class="w-4 h-4 text-cyan-400"></i>
+        <!-- Sound Quick Button -->
+        <button id="header-sound-btn" onclick="toggleSound()" class="p-2 rounded-lg bg-slate-900 border transition-all" title="Toggle Synthesizer SFX">
+          <i data-lucide="volume-2" id="header-sound-icon" class="w-4 h-4"></i>
         </button>
 
-        <button onclick="openControlCenter()" class="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-all flex items-center gap-1 text-xs font-bold">
+        <button onclick="openControlCenter()" class="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-all flex items-center gap-1 text-xs font-bold" title="Access Control Matrix">
           <i data-lucide="sliders" class="w-4 h-4"></i>
           <span class="hidden md:inline">Control Center</span>
         </button>
 
-        <button onclick="restartBattleWithConfirmation()" class="p-2 rounded-lg bg-red-950/40 border border-red-900/40 hover:border-red-800 text-red-400 transition-all flex items-center gap-1 text-xs font-bold">
+        <button onclick="restartBattleWithConfirmation()" class="p-2 rounded-lg bg-red-950/40 border border-red-900/40 hover:border-red-800 text-red-400 transition-all flex items-center gap-1 text-xs font-bold" title="Reset match authority">
           <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
           <span class="hidden md:inline">Restart</span>
         </button>
@@ -493,7 +475,7 @@
       phase: 'setup',
       playerCount: 2,
       startingAuthority: 50,
-      faceToFace: true,
+      faceToFace: false, // Defaulting to normal, can toggle immediately on game page
       soundEnabled: true,
       layoutStyle: 'standard', // 'standard' | 'sideBySide'
       firstPlayer: null,
@@ -578,13 +560,6 @@
         }
       });
       
-      const f2fPanel = document.getElementById('f2f-panel');
-      if (num === 2) {
-        f2fPanel.classList.remove('hidden');
-      } else {
-        f2fPanel.classList.add('hidden');
-      }
-
       renderSetupNameInputs();
     }
 
@@ -610,7 +585,36 @@
       rebuildGridUI();
     }
 
-    // Master function to synchronize all UI indicators matching layout state
+    // Face to Face Mode live header toggle
+    function toggleFaceToFace() {
+      state.faceToFace = !state.faceToFace;
+      playSynth('click');
+      
+      // Sync Control Center Toggle
+      const cDot = document.getElementById('f2f-control-dot');
+      const cToggle = document.getElementById('f2f-control-toggle');
+      if (cDot && cToggle) {
+        if (state.faceToFace) {
+          cDot.className = "w-4 h-4 rounded-full bg-white translate-x-5 transition-transform duration-200";
+          cToggle.className = "w-10 h-5 rounded-full p-0.5 bg-cyan-500 transition-colors duration-200";
+        } else {
+          cDot.className = "w-4 h-4 rounded-full bg-white translate-x-0 transition-transform duration-200";
+          cToggle.className = "w-10 h-5 rounded-full p-0.5 bg-slate-850 transition-colors duration-200";
+        }
+      }
+
+      updateLayoutVisuals();
+      rebuildGridUI();
+    }
+
+    // Sound toggle live header controller
+    function toggleSound() {
+      state.soundEnabled = !state.soundEnabled;
+      playSynth('click');
+      updateLayoutVisuals();
+    }
+
+    // Master function to synchronize all UI indicators matching layouts & modes state
     function updateLayoutVisuals() {
       // 1. Sync Header Segmented Quick Buttons
       const btnStandard = document.getElementById('header-btn-layout-standard');
@@ -638,6 +642,36 @@
           toggle.className = "w-10 h-5 rounded-full p-0.5 bg-slate-850 transition-colors duration-200";
         }
       }
+
+      // 3. Sync Face-to-Face Header Quick Button
+      const f2fBtn = document.getElementById('header-f2f-btn');
+      if (f2fBtn) {
+        if (state.playerCount === 2) {
+          f2fBtn.classList.remove('hidden');
+          if (state.faceToFace) {
+            f2fBtn.className = "p-2 rounded-lg bg-slate-900 border border-cyan-500/50 hover:border-cyan-400 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)] transition-all flex items-center gap-1.5 text-xs font-bold";
+          } else {
+            f2fBtn.className = "p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-all flex items-center gap-1.5 text-xs font-bold";
+          }
+        } else {
+          f2fBtn.classList.add('hidden');
+        }
+      }
+
+      // 4. Sync Sound Header Quick Button
+      const soundBtn = document.getElementById('header-sound-btn');
+      const soundIcon = document.getElementById('header-sound-icon');
+      if (soundBtn && soundIcon) {
+        if (state.soundEnabled) {
+          soundBtn.className = "p-2 rounded-lg bg-slate-900 border border-cyan-500/30 hover:border-cyan-400 text-cyan-400 transition-all";
+          soundIcon.setAttribute('data-lucide', 'volume-2');
+        } else {
+          soundBtn.className = "p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-500 transition-all";
+          soundIcon.setAttribute('data-lucide', 'volume-x');
+        }
+      }
+
+      lucide.createIcons();
     }
 
     // Keep function reference pointing to master update visuals to prevent reference breaks
@@ -668,66 +702,6 @@
           document.getElementById(`btn-authority-${v}`).className = "py-3 px-2 rounded-xl text-sm font-bold transition-all border bg-slate-950/60 hover:bg-slate-800/80 text-slate-300 border-slate-800";
         });
       }
-    }
-
-    function toggleFaceToFace() {
-      state.faceToFace = !state.faceToFace;
-      playSynth('click');
-      
-      const dot = document.getElementById('f2f-dot');
-      const toggle = document.getElementById('f2f-toggle');
-      const cDot = document.getElementById('f2f-control-dot');
-      const cToggle = document.getElementById('f2f-control-toggle');
-
-      if (state.faceToFace) {
-        dot.className = "w-4 h-4 rounded-full bg-white translate-x-6 transition-transform duration-200";
-        toggle.className = "w-12 h-6 rounded-full p-1 bg-cyan-500 transition-colors duration-200";
-        cDot.className = "w-4 h-4 rounded-full bg-white translate-x-5 transition-transform duration-200";
-        cToggle.className = "w-10 h-5 rounded-full p-0.5 bg-cyan-500 transition-colors duration-200";
-      } else {
-        dot.className = "w-4 h-4 rounded-full bg-white translate-x-0 transition-transform duration-200";
-        toggle.className = "w-12 h-6 rounded-full p-1 bg-slate-850 transition-colors duration-200";
-        cDot.className = "w-4 h-4 rounded-full bg-white translate-x-0 transition-transform duration-200";
-        cToggle.className = "w-10 h-5 rounded-full p-0.5 bg-slate-850 transition-colors duration-200";
-      }
-
-      // Live update layout
-      const grid = document.getElementById('players-grid');
-      if (grid.children.length >= 2) {
-        const card1 = grid.children[0];
-        if (state.faceToFace && state.playerCount === 2) {
-          card1.classList.add('rotate-180');
-        } else {
-          card1.classList.remove('rotate-180');
-        }
-      }
-    }
-
-    function toggleSound() {
-      state.soundEnabled = !state.soundEnabled;
-      playSynth('click');
-
-      const dot = document.getElementById('sound-dot');
-      const toggle = document.getElementById('sound-toggle');
-      const icon = document.getElementById('sound-icon');
-      const hIcon = document.getElementById('header-sound-icon');
-
-      if (state.soundEnabled) {
-        dot.className = "w-4 h-4 rounded-full bg-white translate-x-6 transition-transform duration-200";
-        toggle.className = "w-12 h-6 rounded-full p-1 bg-cyan-500 transition-colors duration-200";
-        icon.className = "text-cyan-400";
-        icon.setAttribute('data-lucide', 'volume-2');
-        hIcon.className = "w-4 h-4 text-cyan-400";
-        hIcon.setAttribute('data-lucide', 'volume-2');
-      } else {
-        dot.className = "w-4 h-4 rounded-full bg-white translate-x-0 transition-transform duration-200";
-        toggle.className = "w-12 h-6 rounded-full p-1 bg-slate-850 transition-colors duration-200";
-        icon.className = "text-slate-500";
-        icon.setAttribute('data-lucide', 'volume-x');
-        hIcon.className = "w-4 h-4 text-slate-500";
-        hIcon.setAttribute('data-lucide', 'volume-x');
-      }
-      lucide.createIcons();
     }
 
     // Roll initiative
@@ -982,30 +956,30 @@
             <div class="absolute inset-0 bg-[linear-gradient(rgba(18,24,38,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(18,24,38,0.15)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none z-0"></div>
 
             <!-- Faction Logo Watermark -->
-            \${faction.svg}
+            ${faction.svg}
 
             <!-- Card Header: Profile Info -->
             <div class="p-3 sm:p-4 flex items-center justify-between z-10 bg-slate-950/40 backdrop-blur-sm border-b border-slate-800/20">
               <div class="flex items-center gap-2 max-w-[60%]">
-                <div class="w-3 h-3 rounded-full \${faction.badgeBg} shadow-sm shrink-0 animate-pulse"></div>
+                <div class="w-3 h-3 rounded-full ${faction.badgeBg} shadow-sm shrink-0 animate-pulse"></div>
                 <input
                   type="text"
-                  value="\${player.name}"
-                  onchange="renamePlayer('\${player.id}', this.value)"
+                  value="${player.name}"
+                  onchange="renamePlayer('${player.id}', this.value)"
                   class="bg-transparent font-bold text-sm tracking-wide text-slate-100 hover:bg-slate-800/50 focus:bg-slate-850 focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded px-1.5 py-0.5 truncate w-full"
                   title="Rename Commander"
                   maxLength="16"
                 />
               </div>
               <span class="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800/60 font-extrabold truncate">
-                \${faction.name}
+                ${faction.name}
               </span>
             </div>
 
             <!-- Card Body: Main Numeric display -->
             <div class="flex-1 flex items-center justify-center relative p-2 z-10">
               <!-- Defeated Panel -->
-              <div id="defeated-\${player.id}" class="\${isDefeated ? '' : 'hidden'} absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center z-30">
+              <div id="defeated-${player.id}" class="${isDefeated ? '' : 'hidden'} absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center z-30">
                 <div class="p-3 bg-red-950/50 border border-red-500/40 rounded-full animate-bounce mb-2 text-red-500">
                   <i data-lucide="shield-alert" class="w-10 h-10"></i>
                 </div>
@@ -1016,11 +990,11 @@
               <!-- Authority indicators -->
               <div class="relative text-center select-none py-4">
                 <!-- Floating score change parent container -->
-                <div id="floater-container-\${player.id}" class="absolute -top-6 left-1/2 -translate-x-1/2 w-32 h-12 pointer-events-none select-none"></div>
+                <div id="floater-container-${player.id}" class="absolute -top-6 left-1/2 -translate-x-1/2 w-32 h-12 pointer-events-none select-none"></div>
 
                 <div class="text-7xl md:text-8xl font-black tracking-tighter tabular-nums drop-shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center justify-center">
-                  <span id="score-\${player.id}" class="bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">
-                    \${player.authority}
+                  <span id="score-${player.id}" class="bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">
+                    ${player.authority}
                   </span>
                 </div>
                 <p class="text-[9px] uppercase font-bold tracking-[0.2em] opacity-60 text-slate-400 mt-1">Mothership Authority</p>
@@ -1032,19 +1006,19 @@
               <!-- Outgoing Damage Options (Minus Values) -->
               <div class="grid grid-cols-3 gap-2 sm:gap-3">
                 <button
-                  onclick="modifyAuthority('\${player.id}', -10)"
+                  onclick="modifyAuthority('${player.id}', -10)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-red-950/40 hover:bg-red-900/50 border border-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
                 >
                   -10
                 </button>
                 <button
-                  onclick="modifyAuthority('\${player.id}', -5)"
+                  onclick="modifyAuthority('${player.id}', -5)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-red-950/40 hover:bg-red-900/50 border border-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
                 >
                   -5
                 </button>
                 <button
-                  onclick="modifyAuthority('\${player.id}', -1)"
+                  onclick="modifyAuthority('${player.id}', -1)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-red-950/40 hover:bg-red-900/50 border border-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
                 >
                   -1
@@ -1054,19 +1028,19 @@
               <!-- Incoming Repair Options (Positive values) -->
               <div class="grid grid-cols-3 gap-2 sm:gap-3">
                 <button
-                  onclick="modifyAuthority('\${player.id}', 1)"
+                  onclick="modifyAuthority('${player.id}', 1)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
                 >
                   +1
                 </button>
                 <button
-                  onclick="modifyAuthority('\${player.id}', 5)"
+                  onclick="modifyAuthority('${player.id}', 5)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
                 >
                   +5
                 </button>
                 <button
-                  onclick="modifyAuthority('\${player.id}', 10)"
+                  onclick="modifyAuthority('${player.id}', 10)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
                 >
                   +10
@@ -1083,7 +1057,7 @@
     function renamePlayer(playerId, newName) {
       state.players = state.players.map(p => {
         if (p.id === playerId) {
-          const refined = newName.trim() || `Commander \${playerId.split('-')[1]}`;
+          const refined = newName.trim() || `Commander ${playerId.split('-')[1]}`;
           addLog("Commander in " + FACTIONS[p.factionId].name + " renamed to \"" + refined + "\"");
           return { ...p, name: refined };
         }
@@ -1126,10 +1100,10 @@
           }
 
           // Direct DOM adjustments to optimize score frame performance
-          document.getElementById(`score-\${p.id}`).innerText = nextScore;
+          document.getElementById(`score-${p.id}`).innerText = nextScore;
           
-          const card = document.getElementById(`card-\${p.id}`);
-          const defeatedPanel = document.getElementById(`defeated-\${p.id}`);
+          const card = document.getElementById(`card-${p.id}`);
+          const defeatedPanel = document.getElementById(`defeated-${p.id}`);
           if (isDefeated) {
             card.classList.add('opacity-40', 'scale-[0.98]');
             defeatedPanel.classList.remove('hidden');
@@ -1149,7 +1123,7 @@
 
     // Trigger accumulating floaters above score digits
     function triggerFloater(player, amount) {
-      const container = document.getElementById(`floater-container-\${player.id}`);
+      const container = document.getElementById(`floater-container-${player.id}`);
       if (!container) return;
 
       // Accumulate rapidly inputted scores to prevent rendering block overlap
@@ -1163,10 +1137,10 @@
       // Construct dynamic visual element
       const el = document.createElement('div');
       const isPositive = nextSum >= 0;
-      el.className = `absolute left-1/2 -translate-x-1/2 font-black text-3xl tracking-wide select-none pointer-events-none drop-shadow-[0_0_12px_rgba(255,255,255,0.45)] animate-floatUp \${
+      el.className = `absolute left-1/2 -translate-x-1/2 font-black text-3xl tracking-wide select-none pointer-events-none drop-shadow-[0_0_12px_rgba(255,255,255,0.45)] animate-floatUp ${
         isPositive ? 'text-emerald-400' : 'text-red-500'
       }`;
-      el.innerText = `\${isPositive ? '+' : ''}\${nextSum}`;
+      el.innerText = `${isPositive ? '+' : ''}${nextSum}`;
       container.appendChild(el);
 
       // Erase tracking log after animation duration finishes
