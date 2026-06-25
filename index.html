@@ -52,7 +52,7 @@
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col relative overflow-hidden select-none">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col relative overflow-y-auto select-none">
 
   <!-- Dynamic Starry Space Backdrop -->
   <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
@@ -282,7 +282,7 @@
         </button>
       </div>
 
-      <div class="p-6 space-y-6">
+      <div class="p-6 space-y-6 overflow-y-auto max-h-[65vh]">
         <!-- Interactive fleet swap widgets -->
         <div>
           <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
@@ -667,20 +667,6 @@
       document.getElementById('log-modal').classList.remove('hidden');
     }
 
-    function closeLogs() {
-      playSynth('click');
-      document.getElementById('log-modal').classList.add('hidden');
-    }
-
-    function clearLogs() {
-      showCustomAlert("Clear Telemetry Logs", "Are you sure you want to clear all current session records?", true, (confirmed) => {
-        if (confirmed) {
-          state.logs = [];
-          updateLogsDOM();
-        }
-      });
-    }
-
     // Modal: Control Center
     function openControlCenter() {
       playSynth('click');
@@ -748,6 +734,11 @@
         if (confirmed) {
           playSynth('click');
           state.phase = 'setup';
+          
+          // Restore body scrolling for the setup screen
+          document.body.classList.remove('overflow-hidden');
+          document.body.classList.add('overflow-y-auto');
+          
           document.getElementById('setup-screen').classList.remove('hidden');
           document.getElementById('combat-screen').classList.add('hidden');
           document.getElementById('control-modal').classList.add('hidden');
@@ -759,6 +750,10 @@
     function engageBattle() {
       playSynth('success');
       state.phase = 'playing';
+      
+      // Lock body scrolling during active gameplay
+      document.body.classList.remove('overflow-y-auto');
+      document.body.classList.add('overflow-hidden');
       
       // Initialize Player data entities
       state.players = Array.from({ length: state.playerCount }, (_, idx) => {
@@ -922,6 +917,11 @@
         }
         return p;
       });
+    }
+
+    function closeLogs() {
+      playSynth('click');
+      document.getElementById('log-modal').classList.add('hidden');
     }
 
     // Incremental Combat Modification Controller
