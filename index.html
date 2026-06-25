@@ -1,216 +1,963 @@
-{\rtf1\ansi\ansicpg1252\cocoartf2870
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;}
-{\*\expandedcolortbl;;}
-\margl1440\margr1440\vieww11520\viewh8400\viewkind0
-\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Users, 
+  RotateCcw, 
+  Settings, 
+  Volume2, 
+  VolumeX, 
+  History, 
+  Sparkles, 
+  Plus, 
+  Minus, 
+  X, 
+  Play, 
+  User, 
+  HelpCircle, 
+  Shuffle, 
+  Award,
+  ChevronRight,
+  Info
+} from 'lucide-react';
 
-\f0\fs24 \cf0 <!DOCTYPE html>\
-<html lang="en">\
-<head>\
-  <meta charset="UTF-8" />\
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\
-  <title>Star Realms Life Counter</title>\
-  <style>\
-    body \{\
-      margin: 0;\
-      font-family: system-ui, sans-serif;\
-      background: #0b1020;\
-      color: white;\
-      min-height: 100vh;\
-      display: flex;\
-      flex-direction: column;\
-    \}\
-\
-    header \{\
-      text-align: center;\
-      padding: 16px;\
-      background: #111936;\
-      border-bottom: 2px solid #24345f;\
-    \}\
-\
-    h1 \{\
-      margin: 0;\
-      font-size: 1.5rem;\
-    \}\
-\
-    .game \{\
-      flex: 1;\
-      display: grid;\
-      grid-template-columns: 1fr 1fr;\
-    \}\
-\
-    .player \{\
-      display: flex;\
-      flex-direction: column;\
-      justify-content: center;\
-      align-items: center;\
-      gap: 18px;\
-      padding: 24px;\
-      border: 1px solid #24345f;\
-    \}\
-\
-    .player h2 \{\
-      margin: 0;\
-      font-size: 1.3rem;\
-    \}\
-\
-    .score \{\
-      font-size: clamp(4rem, 14vw, 9rem);\
-      font-weight: 800;\
-      line-height: 1;\
-    \}\
-\
-    .controls \{\
-      display: grid;\
-      grid-template-columns: repeat(3, 70px);\
-      gap: 10px;\
-    \}\
-\
-    button \{\
-      border: none;\
-      border-radius: 12px;\
-      padding: 14px;\
-      font-size: 1.1rem;\
-      font-weight: 700;\
-      color: white;\
-      background: #263a75;\
-      cursor: pointer;\
-    \}\
-\
-    button:hover \{\
-      background: #3652a5;\
-    \}\
-\
-    .damage \{\
-      background: #8b1e2d;\
-    \}\
-\
-    .damage:hover \{\
-      background: #b3293b;\
-    \}\
-\
-    .heal \{\
-      background: #1f7a43;\
-    \}\
-\
-    .heal:hover \{\
-      background: #279e56;\
-    \}\
-\
-    .toolbar \{\
-      display: flex;\
-      justify-content: center;\
-      align-items: center;\
-      gap: 12px;\
-      padding: 16px;\
-      background: #111936;\
-      border-top: 2px solid #24345f;\
-    \}\
-\
-    input \{\
-      width: 70px;\
-      padding: 10px;\
-      border-radius: 10px;\
-      border: none;\
-      font-size: 1rem;\
-      text-align: center;\
-    \}\
-\
-    .reset \{\
-      background: #555;\
-    \}\
-\
-    .reset:hover \{\
-      background: #777;\
-    \}\
-\
-    @media (max-width: 700px) \{\
-      .game \{\
-        grid-template-columns: 1fr;\
-      \}\
-\
-      .player \{\
-        min-height: 40vh;\
-      \}\
-    \}\
-  </style>\
-</head>\
-<body>\
-  <header>\
-    <h1>Star Realms Authority Counter</h1>\
-  </header>\
-\
-  <main class="game">\
-    <section class="player">\
-      <h2>Player 1</h2>\
-      <div class="score" id="score1">50</div>\
-      <div class="controls">\
-        <button class="damage" onclick="changeScore(1, -1)">\uc0\u8722 1</button>\
-        <button class="damage" onclick="changeScore(1, -5)">\uc0\u8722 5</button>\
-        <button class="damage" onclick="changeScore(1, -customAmount())">\uc0\u8722 X</button>\
-\
-        <button class="heal" onclick="changeScore(1, 1)">+1</button>\
-        <button class="heal" onclick="changeScore(1, 5)">+5</button>\
-        <button class="heal" onclick="changeScore(1, customAmount())">+X</button>\
-      </div>\
-    </section>\
-\
-    <section class="player">\
-      <h2>Player 2</h2>\
-      <div class="score" id="score2">50</div>\
-      <div class="controls">\
-        <button class="damage" onclick="changeScore(2, -1)">\uc0\u8722 1</button>\
-        <button class="damage" onclick="changeScore(2, -5)">\uc0\u8722 5</button>\
-        <button class="damage" onclick="changeScore(2, -customAmount())">\uc0\u8722 X</button>\
-\
-        <button class="heal" onclick="changeScore(2, 1)">+1</button>\
-        <button class="heal" onclick="changeScore(2, 5)">+5</button>\
-        <button class="heal" onclick="changeScore(2, customAmount())">+X</button>\
-      </div>\
-    </section>\
-  </main>\
-\
-  <div class="toolbar">\
-    <label for="amount">X:</label>\
-    <input id="amount" type="number" value="10" min="1" />\
-    <button class="reset" onclick="resetGame()">Reset</button>\
-  </div>\
-\
-  <script>\
-    const STARTING_AUTHORITY = 50;\
-\
-    let scores = \{\
-      1: STARTING_AUTHORITY,\
-      2: STARTING_AUTHORITY\
-    \};\
-\
-    function changeScore(player, amount) \{\
-      scores[player] += amount;\
-      document.getElementById(`score$\{player\}`).textContent = scores[player];\
-\
-      if (scores[player] <= 0) \{\
-        document.getElementById(`score$\{player\}`).style.color = "#ff4d4d";\
-      \} else \{\
-        document.getElementById(`score$\{player\}`).style.color = "white";\
-      \}\
-    \}\
-\
-    function customAmount() \{\
-      const value = Number(document.getElementById("amount").value);\
-      return Number.isFinite(value) && value > 0 ? value : 1;\
-    \}\
-\
-    function resetGame() \{\
-      scores[1] = STARTING_AUTHORITY;\
-      scores[2] = STARTING_AUTHORITY;\
-\
-      document.getElementById("score1").textContent = scores[1];\
-      document.getElementById("score2").textContent = scores[2];\
-\
-      document.getElementById("score1").style.color = "white";\
-      document.getElementById("score2").style.color = "white";\
-    \}\
-  </script>\
-</body>\
-</html>}
+// Pure Web Audio synthesizer to generate high-fidelity retro sci-fi sounds
+const playSynthSound = (type, enabled) => {
+  if (!enabled) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    if (type === 'damage') {
+      // Descending plasma blast
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(550, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.18);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.18);
+    } else if (type === 'heal') {
+      // Dual-frequency healing telemetry tone
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(320, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.22);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.22);
+    } else if (type === 'defeat') {
+      // Multi-stage explosion
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(140, ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(40, ctx.currentTime + 0.8);
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.8);
+
+      // Noise layer for explosion crackle
+      const noiseOsc = ctx.createOscillator();
+      const noiseGain = ctx.createGain();
+      noiseOsc.type = 'sawtooth';
+      noiseOsc.frequency.setValueAtTime(80, ctx.currentTime);
+      noiseOsc.frequency.linearRampToValueAtTime(10, ctx.currentTime + 0.5);
+      noiseOsc.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+      noiseGain.gain.setValueAtTime(0.15, ctx.currentTime);
+      noiseGain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      noiseOsc.start();
+      noiseOsc.stop(ctx.currentTime + 0.5);
+    } else if (type === 'click') {
+      // Tech UI tick
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.03, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.06);
+    } else if (type === 'success') {
+      // Happy cosmic chord
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.25);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.25);
+    }
+  } catch (error) {
+    console.warn('Web Audio API is not supported or was blocked by autoplay policies.');
+  }
+};
+
+const FACTIONS = [
+  {
+    id: 'empire',
+    name: 'Star Empire',
+    colorClass: 'from-blue-600/30 to-slate-900/90 border-blue-500/50 shadow-blue-500/20 text-blue-400',
+    accentColor: '#3b82f6',
+    glowColor: 'shadow-blue-500/30',
+    lightBg: 'bg-blue-500',
+    svgIcon: (
+      <svg className="w-full h-full opacity-10 absolute pointer-events-none" viewBox="0 0 100 100" fill="currentColor">
+        <path d="M50 5 L90 35 L75 85 L25 85 L10 35 Z M50 20 L75 40 L65 75 L35 75 L25 40 Z" />
+        <circle cx="50" cy="50" r="10" />
+        <line x1="50" y1="5" x2="50" y2="85" stroke="currentColor" strokeWidth="2" />
+        <line x1="10" y1="35" x2="90" y2="35" stroke="currentColor" strokeWidth="2" />
+      </svg>
+    )
+  },
+  {
+    id: 'federation',
+    name: 'Trade Federation',
+    colorClass: 'from-amber-500/20 to-slate-900/90 border-amber-500/50 shadow-amber-500/20 text-amber-400',
+    accentColor: '#f59e0b',
+    glowColor: 'shadow-amber-500/30',
+    lightBg: 'bg-amber-500',
+    svgIcon: (
+      <svg className="w-full h-full opacity-10 absolute pointer-events-none" viewBox="0 0 100 100" fill="currentColor">
+        <rect x="25" y="15" width="50" height="70" rx="10" />
+        <path d="M15 35 L85 35 L85 65 L15 65 Z" />
+        <circle cx="50" cy="50" r="18" fill="none" stroke="currentColor" strokeWidth="4" />
+        <circle cx="50" cy="50" r="8" />
+      </svg>
+    )
+  },
+  {
+    id: 'blob',
+    name: 'The Blob',
+    colorClass: 'from-emerald-600/30 to-slate-900/90 border-emerald-500/50 shadow-emerald-500/20 text-emerald-400',
+    accentColor: '#10b981',
+    glowColor: 'shadow-emerald-500/30',
+    lightBg: 'bg-emerald-500',
+    svgIcon: (
+      <svg className="w-full h-full opacity-10 absolute pointer-events-none" viewBox="0 0 100 100" fill="currentColor">
+        <path d="M50 10 C20 10, 10 35, 10 50 C10 70, 30 90, 50 90 C70 90, 90 70, 90 50 C90 35, 80 10, 50 10 Z" />
+        <circle cx="35" cy="40" r="8" />
+        <circle cx="65" cy="40" r="8" />
+        <circle cx="50" cy="65" r="14" />
+        <path d="M20 50 Q35 70, 50 50 T80 50" fill="none" stroke="currentColor" strokeWidth="3" />
+      </svg>
+    )
+  },
+  {
+    id: 'cult',
+    name: 'Machine Cult',
+    colorClass: 'from-red-600/30 to-slate-900/90 border-red-500/50 shadow-red-500/20 text-red-500',
+    accentColor: '#ef4444',
+    glowColor: 'shadow-red-500/30',
+    lightBg: 'bg-red-500',
+    svgIcon: (
+      <svg className="w-full h-full opacity-10 absolute pointer-events-none" viewBox="0 0 100 100" fill="currentColor">
+        <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="6" />
+        <path d="M50 5 L50 20 M50 80 L50 95 M5 50 L20 50 M80 50 L95 50 M18 18 L29 29 M71 71 L82 82 M18 82 L29 71 M71 29 L82 18" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
+        <polygon points="50,30 65,60 35,60" />
+      </svg>
+    )
+  }
+];
+
+export default function App() {
+  // Game Setup States
+  const [gameState, setGameState] = useState('setup'); // 'setup' | 'playing' | 'gameover'
+  const [playerCount, setPlayerCount] = useState(2);
+  const [startingAuthority, setStartingAuthority] = useState(50);
+  const [customAuthority, setCustomAuthority] = useState('50');
+  const [faceToFace, setFaceToFace] = useState(true); // 2-player inverted setting
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Player Entities
+  const [players, setPlayers] = useState([]);
+  
+  // Auxiliary States
+  const [firstPlayer, setFirstPlayer] = useState(null);
+  const [rollingFirst, setRollingFirst] = useState(false);
+  const [gameLogs, setGameLogs] = useState([]);
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  
+  // Combat floaters per player to display brief change history
+  const [floaters, setFloaters] = useState({}); // { [playerId]: { amount: number, key: number } }
+  const timeoutRefs = useRef({});
+
+  // Initialize/Reset Game
+  const initGame = () => {
+    playSynthSound('success', soundEnabled);
+    const startLife = startingAuthority;
+    
+    const initialPlayers = Array.from({ length: playerCount }, (_, idx) => {
+      // Cycle through factions so everyone gets a distinct theme
+      const faction = FACTIONS[idx % FACTIONS.length];
+      return {
+        id: `p-${idx + 1}`,
+        name: `Commander ${idx + 1}`,
+        authority: startLife,
+        faction: faction,
+        defeated: false,
+        history: [{ timestamp: new Date().toLocaleTimeString(), change: 0, result: startLife }]
+      };
+    });
+
+    setPlayers(initialPlayers);
+    setGameLogs([{ 
+      time: new Date().toLocaleTimeString(), 
+      text: `Galaxy simulation started with ${playerCount} pilots. Starting Authority: ${startLife}.` 
+    }]);
+    setFirstPlayer(null);
+    setGameState('playing');
+  };
+
+  // Trigger floating combat change animations
+  const triggerFloater = (playerId, changeAmount) => {
+    const currentVal = floaters[playerId]?.amount || 0;
+    const newVal = currentVal + changeAmount;
+    
+    // Create unique key to force element re-mount (re-trigger CSS animation)
+    const newKey = Math.random();
+
+    setFloaters(prev => ({
+      ...prev,
+      [playerId]: { amount: newVal, key: newKey }
+    }));
+
+    // Clear existing timer for this player's floater
+    if (timeoutRefs.current[playerId]) {
+      clearTimeout(timeoutRefs.current[playerId]);
+    }
+
+    // Set new timer to clear floater state after 1.5 seconds of inactivity
+    timeoutRefs.current[playerId] = setTimeout(() => {
+      setFloaters(prev => {
+        const next = { ...prev };
+        delete next[playerId];
+        return next;
+      });
+    }, 1500);
+  };
+
+  // Modify authority values
+  const adjustAuthority = (playerId, amount) => {
+    if (gameState !== 'playing') return;
+
+    let soundToPlay = amount > 0 ? 'heal' : 'damage';
+    let isDefeatedEvent = false;
+
+    setPlayers(prevPlayers => {
+      return prevPlayers.map(p => {
+        if (p.id === playerId) {
+          const newAuthority = Math.max(0, p.authority + amount);
+          const timestamp = new Date().toLocaleTimeString();
+          
+          triggerFloater(playerId, amount);
+
+          // Add change to game global logs
+          const logText = `${p.name} (${p.faction.name}) ${amount > 0 ? 'gained' : 'lost'} ${Math.abs(amount)} Authority (Now: ${newAuthority})`;
+          setGameLogs(prev => [{ time: timestamp, text: logText }, ...prev]);
+
+          // Handle defeat scenario
+          let nextDefeated = p.defeated;
+          if (newAuthority === 0 && !p.defeated) {
+            nextDefeated = true;
+            isDefeatedEvent = true;
+            soundToPlay = 'defeat';
+            const defeatLog = `💥 CRITICAL ERROR: ${p.name}'s mothership has been annihilated!`;
+            setGameLogs(prev => [{ time: timestamp, text: defeatLog }, ...prev]);
+          } else if (newAuthority > 0 && p.defeated) {
+            // Recovered from defeated (if adjusted back up)
+            nextDefeated = false;
+          }
+
+          return {
+            ...p,
+            authority: newAuthority,
+            defeated: nextDefeated,
+            history: [...p.history, { timestamp, change: amount, result: newAuthority }]
+          };
+        }
+        return p;
+      });
+    });
+
+    playSynthSound(soundToPlay, soundEnabled);
+  };
+
+  // Check for game-over state whenever players health updates
+  useEffect(() => {
+    if (gameState === 'playing' && players.length > 0) {
+      const alivePlayers = players.filter(p => !p.defeated);
+      if (alivePlayers.length === 1 && players.length > 1) {
+        // Trigger game over with a small delay for visual finish
+        setTimeout(() => {
+          setGameState('gameover');
+          setGameLogs(prev => [{ 
+            time: new Date().toLocaleTimeString(), 
+            text: `🏆 VICTORY: ${alivePlayers[0].name} has conquered the sector!` 
+          }, ...prev]);
+        }, 800);
+      } else if (alivePlayers.length === 0) {
+        // Tie or all dead
+        setGameState('gameover');
+      }
+    }
+  }, [players, gameState]);
+
+  // Dice roll simulation to decide starting player
+  const selectRandomFirstPlayer = () => {
+    if (rollingFirst) return;
+    playSynthSound('click', soundEnabled);
+    setRollingFirst(true);
+    let iterations = 0;
+    const maxIterations = 12;
+    
+    const interval = setInterval(() => {
+      const randomIndex = Math.floor(Math.random() * playerCount);
+      setFirstPlayer(`p-${randomIndex + 1}`);
+      iterations++;
+      
+      if (iterations >= maxIterations) {
+        clearInterval(interval);
+        setRollingFirst(false);
+        playSynthSound('success', soundEnabled);
+        
+        const selectedPlayerName = `Commander ${Math.floor(Math.random() * playerCount) + 1}`;
+        setGameLogs(prev => [{ 
+          time: new Date().toLocaleTimeString(), 
+          text: `🎲 Initiative roll: Player ${selectedPlayerName} gets the first combat turn.` 
+        }, ...prev]);
+      }
+    }, 100);
+  };
+
+  const handleCustomAuthorityChange = (val) => {
+    setCustomAuthority(val);
+    const parsed = parseInt(val, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      setStartingAuthority(parsed);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative overflow-hidden select-none">
+      {/* Dynamic Starry Space Backdrop */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-black"></div>
+        {/* Synthetic Nebulas */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-blue-500/5 blur-[120px] animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-emerald-500/5 blur-[120px] animate-pulse duration-1000"></div>
+        
+        {/* Twinkling Stars Map */}
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute top-12 left-1/3 w-1 h-1 bg-white rounded-full animate-ping"></div>
+          <div className="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-sky-200 rounded-full animate-pulse"></div>
+          <div className="absolute bottom-1/3 left-10 w-1 h-1 bg-white rounded-full"></div>
+          <div className="absolute bottom-12 right-1/3 w-1 h-1 bg-slate-400 rounded-full animate-pulse duration-700"></div>
+          <div className="absolute top-2/3 left-2/3 w-1 h-1 bg-emerald-300 rounded-full animate-ping duration-1000"></div>
+        </div>
+      </div>
+
+      {/* SETUP PHASE SCREEN */}
+      {gameState === 'setup' && (
+        <div className="flex-1 z-10 flex flex-col justify-center items-center px-4 py-8 max-w-2xl mx-auto w-full">
+          {/* Logo / Header */}
+          <div className="text-center mb-8 relative">
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl"></div>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-wider bg-gradient-to-r from-blue-400 via-sky-300 to-emerald-400 bg-clip-text text-transparent uppercase drop-shadow-lg">
+              Star Realms
+            </h1>
+            <p className="text-xs tracking-[0.25em] text-cyan-400 font-bold uppercase mt-1">Combat Deck Authority Counter</p>
+          </div>
+
+          {/* Setup Deck Panel */}
+          <div className="w-full bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl p-6 md:p-8 shadow-2xl relative">
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"></div>
+            
+            <h2 className="text-lg font-semibold text-slate-300 mb-6 flex items-center gap-2">
+              <Settings className="w-5 h-5 text-cyan-400" /> System Initialization
+            </h2>
+
+            {/* Player Count Settings */}
+            <div className="mb-6">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                Fleet Size (Players)
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {[2, 3, 4].map(num => (
+                  <button
+                    key={num}
+                    onClick={() => {
+                      playSynthSound('click', soundEnabled);
+                      setPlayerCount(num);
+                    }}
+                    className={`py-3 px-4 rounded-xl font-bold transition-all duration-200 border flex flex-col items-center gap-1 ${
+                      playerCount === num 
+                        ? 'bg-gradient-to-b from-cyan-500 to-blue-600 text-white border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]' 
+                        : 'bg-slate-950/60 hover:bg-slate-800/80 text-slate-300 border-slate-800'
+                    }`}
+                  >
+                    <span className="text-xl">{num}</span>
+                    <span className="text-[9px] uppercase tracking-wider opacity-80">Commanders</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Starting Authority (Life) Settings */}
+            <div className="mb-6">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                Starting Authority
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {[50, 75, 100].map(val => (
+                  <button
+                    key={val}
+                    onClick={() => {
+                      playSynthSound('click', soundEnabled);
+                      setStartingAuthority(val);
+                      setCustomAuthority(val.toString());
+                    }}
+                    className={`py-3 px-2 rounded-xl text-sm font-bold transition-all border ${
+                      startingAuthority === val && customAuthority === val.toString()
+                        ? 'bg-gradient-to-b from-cyan-500 to-blue-600 text-white border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
+                        : 'bg-slate-950/60 hover:bg-slate-800/80 text-slate-300 border-slate-800'
+                    }`}
+                  >
+                    {val}
+                  </button>
+                ))}
+                
+                {/* Custom input */}
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={customAuthority}
+                    onChange={(e) => handleCustomAuthorityChange(e.target.value)}
+                    placeholder="Custom"
+                    className={`w-full py-3 px-2 rounded-xl text-sm font-bold bg-slate-950/60 border text-center text-white focus:outline-none focus:ring-1 focus:ring-cyan-500 ${
+                      ![50, 75, 100].includes(startingAuthority) || customAuthority !== startingAuthority.toString()
+                        ? 'border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.25)] text-cyan-400'
+                        : 'border-slate-800'
+                    }`}
+                  />
+                  <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1 bg-slate-900 text-[8px] font-bold text-cyan-400/80 rounded uppercase">Custom</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Layout Customizations */}
+            {playerCount === 2 && (
+              <div className="mb-6 p-4 rounded-xl bg-slate-950/40 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-300">Face-to-Face Mode</h4>
+                  <p className="text-xs text-slate-400">Inverts Commander 1 for table play.</p>
+                </div>
+                <button
+                  onClick={() => {
+                    playSynthSound('click', soundEnabled);
+                    setFaceToFace(!faceToFace);
+                  }}
+                  className={`w-12 h-6 rounded-full p-1 transition-colors duration-200 ${
+                    faceToFace ? 'bg-cyan-500' : 'bg-slate-800'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
+                    faceToFace ? 'translate-x-6' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+            )}
+
+            {/* Audio configuration toggle */}
+            <div className="mb-8 p-4 rounded-xl bg-slate-950/40 border border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {soundEnabled ? <Volume2 className="text-cyan-400" /> : <VolumeX className="text-slate-500" />}
+                <div>
+                  <h4 className="text-sm font-bold text-slate-300">Tactical SFX</h4>
+                  <p className="text-xs text-slate-400">Pure synth laser & shielding tones.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setSoundEnabled(!soundEnabled);
+                  playSynthSound('click', !soundEnabled);
+                }}
+                className={`w-12 h-6 rounded-full p-1 transition-colors duration-200 ${
+                  soundEnabled ? 'bg-cyan-500' : 'bg-slate-800'
+                }`}
+              >
+                <div className={`w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
+                  soundEnabled ? 'translate-x-6' : 'translate-x-0'
+                }`} />
+              </button>
+            </div>
+
+            {/* Determine Initiative Selector */}
+            <div className="mb-8 p-4 rounded-xl bg-slate-950/80 border border-dashed border-slate-800 flex flex-col items-center text-center">
+              <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                <Shuffle className="w-3.5 h-3.5" /> Sector Initiative Generator
+              </h4>
+              <p className="text-xs text-slate-400 mb-3">Roll a high-energy hyper-dice to determine who deploys first.</p>
+              
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={selectRandomFirstPlayer}
+                  className="py-2 px-4 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-2 border border-slate-700 active:translate-y-0.5 transition-all"
+                  disabled={rollingFirst}
+                >
+                  {rollingFirst ? 'Rerolling Matrix...' : 'Roll Initiative'}
+                </button>
+                {firstPlayer && (
+                  <div className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold animate-bounce">
+                    🚀 {players.find(p => p.id === firstPlayer)?.name || `Commander ${firstPlayer.slice(-1)}`} Goes First!
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Launch Star Battle */}
+            <button
+              onClick={initGame}
+              className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 text-white font-bold text-lg tracking-wider hover:opacity-95 transition-all shadow-[0_0_25px_rgba(6,182,212,0.4)] hover:shadow-[0_0_35px_rgba(6,182,212,0.5)] active:scale-[0.99] flex items-center justify-center gap-2"
+            >
+              <Play className="w-5 h-5 fill-current" /> Engage Hyperdrive
+            </button>
+          </div>
+
+          <p className="text-[10px] text-slate-500 mt-6 max-w-sm text-center">
+            *Star Realms is a registered trademark of Wise Wizard Games. This is an unofficial, community companion utility for managing game state.
+          </p>
+        </div>
+      )}
+
+      {/* ACTIVE COMBAT PHASE SCREEN */}
+      {gameState !== 'setup' && (
+        <div className="flex-1 z-10 flex flex-col h-screen overflow-hidden">
+          
+          {/* Tactical Space Command Header */}
+          <header className="px-4 py-2 bg-slate-950/80 border-b border-slate-800/80 backdrop-blur-md flex items-center justify-between z-20">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black tracking-widest text-slate-400 uppercase hidden sm:inline">Star Realms</span>
+              <span className="px-1.5 py-0.5 text-[9px] font-black uppercase rounded bg-slate-800 text-cyan-400 border border-cyan-500/20">Active Combat Sector</span>
+            </div>
+
+            {/* Central Controls */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  playSynthSound('click', soundEnabled);
+                  setShowLogModal(true);
+                }}
+                className="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-all flex items-center gap-1.5 text-xs font-bold"
+                title="System combat log"
+              >
+                <History className="w-4 h-4" />
+                <span className="hidden md:inline">Combat Logs</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  playSynthSound('click', soundEnabled);
+                  setSoundEnabled(!soundEnabled);
+                }}
+                className="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-all"
+                title={soundEnabled ? 'Mute Sounds' : 'Unmute Sounds'}
+              >
+                {soundEnabled ? <Volume2 className="w-4 h-4 text-cyan-400" /> : <VolumeX className="w-4 h-4 text-slate-500" />}
+              </button>
+
+              <button
+                onClick={() => {
+                  playSynthSound('click', soundEnabled);
+                  setShowSettingsModal(true);
+                }}
+                className="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-all flex items-center gap-1 text-xs font-bold"
+                title="Battle options"
+              >
+                <Settings className="w-4 h-4" />
+                <span className="hidden md:inline">Control Center</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  if(confirm("Are you sure you want to reset this engagement and start fresh?")) {
+                    initGame();
+                  }
+                }}
+                className="p-2 rounded-lg bg-red-950/40 border border-red-900/40 hover:border-red-800 text-red-400 transition-all flex items-center gap-1 text-xs font-bold"
+                title="Reset Match"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span className="hidden md:inline">Restart</span>
+              </button>
+            </div>
+          </header>
+
+          {/* PLAYERS CARD LAYOUT PANEL */}
+          <div className={`flex-1 grid gap-2 p-2 h-[calc(100vh-50px)] overflow-hidden ${
+            playerCount === 2 
+              ? 'grid-rows-2' 
+              : playerCount === 3 
+                ? 'grid-rows-3 sm:grid-rows-2 sm:grid-cols-2' 
+                : 'grid-cols-2 grid-rows-2'
+          }`}>
+            {players.map((player, index) => {
+              // Handle rotation transformations
+              const isFirstInTwoPlayer = playerCount === 2 && index === 0;
+              const shouldInvert = isFirstInTwoPlayer && faceToFace;
+              const isDefeated = player.defeated;
+              
+              const pFloater = floaters[player.id];
+
+              return (
+                <div
+                  key={player.id}
+                  className={`relative flex flex-col justify-between rounded-xl border-2 overflow-hidden transition-all duration-300 bg-gradient-to-br ${
+                    player.faction.colorClass
+                  } ${
+                    isDefeated ? 'opacity-40 grayscale-[40%] scale-[0.98]' : ''
+                  } ${shouldInvert ? 'rotate-180 transform' : ''}`}
+                >
+                  {/* Subtle Grid overlay for high-tech HUD styling */}
+                  <div className="absolute inset-0 bg-[linear-gradient(rgba(18,24,38,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(18,24,38,0.15)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none z-0"></div>
+
+                  {/* Faction crest watermark */}
+                  {player.faction.svgIcon}
+
+                  {/* Top Panel: Player name and Faction Badge */}
+                  <div className="p-3 flex items-center justify-between z-10 bg-slate-950/40 backdrop-blur-sm border-b border-slate-800/20">
+                    <div className="flex items-center gap-2 max-w-[65%]">
+                      <div className={`w-3 h-3 rounded-full ${player.faction.lightBg} shadow-sm shrink-0 animate-pulse`}></div>
+                      <input
+                        type="text"
+                        value={player.name}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setPlayers(prev => prev.map(p => p.id === player.id ? { ...p, name: val } : p));
+                        }}
+                        className="bg-transparent font-bold text-sm tracking-wide text-slate-100 hover:bg-slate-800/50 focus:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded px-1.5 py-0.5 truncate w-full"
+                        title="Click to rename pilot"
+                        maxLength={18}
+                      />
+                    </div>
+                    
+                    <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800 font-extrabold truncate">
+                      {player.faction.name}
+                    </span>
+                  </div>
+
+                  {/* Main Authority Deck Interface */}
+                  <div className="flex-1 flex items-center justify-center relative p-2 z-10">
+                    
+                    {/* Defeated Overlay screen */}
+                    {isDefeated && (
+                      <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center z-30">
+                        <div className="p-3 bg-red-950/50 border border-red-500/40 rounded-full animate-bounce mb-2">
+                          <X className="w-10 h-10 text-red-500" />
+                        </div>
+                        <h3 className="text-lg font-black text-red-500 uppercase tracking-widest">Mothership Destroyed</h3>
+                        <p className="text-xs text-slate-400 mt-1">Authority reduced to absolute zero.</p>
+                      </div>
+                    )}
+
+                    {/* Numeric Score deck */}
+                    <div className="relative text-center select-none py-4">
+                      {/* Floating Combat Log Floaters (+ / - indicators) */}
+                      {pFloater && (
+                        <div 
+                          key={pFloater.key}
+                          className={`absolute -top-6 left-1/2 -translate-x-1/2 font-black text-3xl tracking-wide select-none pointer-events-none drop-shadow-[0_0_12px_rgba(255,255,255,0.4)] animate-floatUp ${
+                            pFloater.amount >= 0 ? 'text-emerald-400' : 'text-red-500'
+                          }`}
+                        >
+                          {pFloater.amount >= 0 ? `+${pFloater.amount}` : pFloater.amount}
+                        </div>
+                      )}
+                      
+                      <div className="text-7xl md:text-8xl font-black tracking-tighter tabular-nums drop-shadow-[0_0_20px_rgba(255,255,255,0.15)] flex items-center justify-center">
+                        <span className="bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">
+                          {player.authority}
+                        </span>
+                      </div>
+                      <p className="text-[10px] uppercase font-black tracking-[0.3em] opacity-60 text-slate-400 mt-1">Combat Authority</p>
+                    </div>
+                  </div>
+
+                  {/* Bottom: Fast Modifier Combat Controls */}
+                  <div className="p-3 bg-slate-950/60 backdrop-blur-md border-t border-slate-800/30 z-10 flex flex-col gap-2">
+                    
+                    {/* DAMAGE (Red/Minus actions) */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        onClick={() => adjustAuthority(player.id, -10)}
+                        className="py-2.5 rounded-lg font-bold text-xs bg-red-950/40 hover:bg-red-900/40 border border-red-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
+                      >
+                        <Minus className="w-3 h-3" />10
+                      </button>
+                      <button
+                        onClick={() => adjustAuthority(player.id, -5)}
+                        className="py-2.5 rounded-lg font-bold text-xs bg-red-950/40 hover:bg-red-900/40 border border-red-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
+                      >
+                        <Minus className="w-3 h-3" />5
+                      </button>
+                      <button
+                        onClick={() => adjustAuthority(player.id, -1)}
+                        className="py-2.5 rounded-lg font-bold text-xs bg-red-950/40 hover:bg-red-900/40 border border-red-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
+                      >
+                        <Minus className="w-3 h-3" />1
+                      </button>
+                    </div>
+
+                    {/* HEAL / AUTHORITY (Green/Plus actions) */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        onClick={() => adjustAuthority(player.id, 1)}
+                        className="py-2.5 rounded-lg font-bold text-xs bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
+                      >
+                        <Plus className="w-3 h-3" />1
+                      </button>
+                      <button
+                        onClick={() => adjustAuthority(player.id, 5)}
+                        className="py-2.5 rounded-lg font-bold text-xs bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
+                      >
+                        <Plus className="w-3 h-3" />5
+                      </button>
+                      <button
+                        onClick={() => adjustAuthority(player.id, 10)}
+                        className="py-2.5 rounded-lg font-bold text-xs bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
+                      >
+                        <Plus className="w-3 h-3" />10
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* CHRONOLOGICAL COMBAT LOG MODAL */}
+      {showLogModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full max-h-[80vh] flex flex-col shadow-2xl overflow-hidden relative">
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent"></div>
+            
+            <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/60">
+              <h3 className="font-extrabold text-slate-100 flex items-center gap-2 text-sm uppercase tracking-wider">
+                <History className="w-4 h-4 text-cyan-400" /> Sector Battle Records
+              </h3>
+              <button
+                onClick={() => {
+                  playSynthSound('click', soundEnabled);
+                  setShowLogModal(false);
+                }}
+                className="p-1 rounded bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 p-4 overflow-y-auto space-y-2 text-xs font-mono bg-slate-950/30">
+              {gameLogs.length === 0 ? (
+                <p className="text-slate-500 text-center py-8 italic">No combat transactions logged in this cycle.</p>
+              ) : (
+                gameLogs.map((log, index) => (
+                  <div 
+                    key={index} 
+                    className={`p-2.5 rounded border border-slate-800/40 bg-slate-900/60 flex gap-2.5 items-start ${
+                      log.text.includes('🏆') 
+                        ? 'border-yellow-500/30 bg-yellow-500/5 text-yellow-300 font-bold' 
+                        : log.text.includes('💥') 
+                          ? 'border-red-500/30 bg-red-500/5 text-red-400 font-bold animate-pulse' 
+                          : 'text-slate-300'
+                    }`}
+                  >
+                    <span className="text-cyan-500/70 font-bold select-none shrink-0">{log.time}</span>
+                    <span className="leading-relaxed">{log.text}</span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-800 bg-slate-950/60 flex justify-between items-center">
+              <button
+                onClick={() => {
+                  if(confirm("Wipe all telemetry battle records?")) {
+                    setGameLogs([]);
+                  }
+                }}
+                className="text-[10px] uppercase font-bold text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-950/20"
+              >
+                Wipe Log
+              </button>
+              <button
+                onClick={() => {
+                  playSynthSound('click', soundEnabled);
+                  setShowLogModal(false);
+                }}
+                className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SYSTEM CONTROL CENTER MODAL */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full flex flex-col shadow-2xl overflow-hidden relative">
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent"></div>
+            
+            <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/60">
+              <h3 className="font-extrabold text-slate-100 flex items-center gap-2 text-sm uppercase tracking-wider">
+                <Settings className="w-4 h-4 text-cyan-400" /> Sector Control Center
+              </h3>
+              <button
+                onClick={() => {
+                  playSynthSound('click', soundEnabled);
+                  setShowSettingsModal(false);
+                }}
+                className="p-1 rounded bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              
+              {/* Dynamic Faction Swap Selectors */}
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" /> Rearrange Faction Fleets
+                </h4>
+                
+                <div className="space-y-3">
+                  {players.map((p, pIndex) => (
+                    <div key={p.id} className="flex items-center justify-between p-2 rounded-lg bg-slate-950/50 border border-slate-800">
+                      <span className="text-xs font-bold text-slate-300 truncate max-w-[120px]">{p.name}</span>
+                      
+                      <div className="flex gap-1.5">
+                        {FACTIONS.map(faction => {
+                          const isAssigned = p.faction.id === faction.id;
+                          return (
+                            <button
+                              key={faction.id}
+                              onClick={() => {
+                                playSynthSound('click', soundEnabled);
+                                setPlayers(prev => prev.map(item => {
+                                  if (item.id === p.id) {
+                                    return { ...item, faction: faction };
+                                  }
+                                  return item;
+                                }));
+                              }}
+                              className={`w-7 h-7 rounded-md border text-[9px] font-black flex items-center justify-center transition-all ${
+                                isAssigned 
+                                  ? 'bg-slate-800 text-white shadow' 
+                                  : 'bg-slate-950 opacity-40 hover:opacity-80'
+                              }`}
+                              style={{ borderColor: isAssigned ? faction.accentColor : '#1e293b', color: faction.accentColor }}
+                              title={`Equip ${faction.name}`}
+                            >
+                              {faction.name.charAt(0)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Layout Rotation for 2 Players */}
+              {playerCount === 2 && (
+                <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wide">Interactive Rotation</h4>
+                    <p className="text-[10px] text-slate-400">Invert Top player view for local table setups.</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      playSynthSound('click', soundEnabled);
+                      setFaceToFace(!faceToFace);
+                    }}
+                    className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 ${
+                      faceToFace ? 'bg-cyan-500' : 'bg-slate-850'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
+                      faceToFace ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+              )}
+
+              {/* End of Current Match Option */}
+              <button
+                onClick={() => {
+                  if(confirm("Leave combat sector? Current score status will be wiped.")) {
+                    playSynthSound('click', soundEnabled);
+                    setGameState('setup');
+                    setShowSettingsModal(false);
+                  }
+                }}
+                className="w-full py-3 rounded-xl border border-red-900/50 hover:bg-red-950/20 text-red-400 font-bold text-xs uppercase tracking-widest transition-all"
+              >
+                Quit Combat to Fleet Setup
+              </button>
+
+            </div>
+
+            <div className="p-4 border-t border-slate-800 bg-slate-950/60 flex justify-end">
+              <button
+                onClick={() => {
+                  playSynthSound('click', soundEnabled);
+                  setShowSettingsModal(false);
+                }}
+                className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs uppercase tracking-wide shadow-md shadow-cyan-950"
+              >
+                Apply Systems
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STYLES & FLOATING COMBAT KEYFRAME STYLES */}
+      <style>{`
+        @keyframes floatUp {
+          0% {
+            opacity: 0;
+            transform: translate(-50%, 15px) scale(0.7);
+          }
+          15% {
+            opacity: 1;
+            transform: translate(-50%, -10px) scale(1.1);
+          }
+          80% {
+            opacity: 1;
+            transform: translate(-50%, -30px) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(-50%, -55px) scale(0.8);
+          }
+        }
+        .animate-floatUp {
+          animation: floatUp 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+          -webkit-appearance: none; 
+          margin: 0; 
+        }
+      `}</style>
+    </div>
+  );
+}
