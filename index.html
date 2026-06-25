@@ -205,14 +205,20 @@
             <span class="hidden md:inline">Side-by-Side</span>
           </button>
         </div>
+
+        <!-- Face to Face Rotation Button (Grouped on Left, only visible in 2p mode) -->
+        <button id="header-f2f-btn" onclick="toggleFaceToFace()" class="p-1 px-2.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1.5 hidden" title="Invert Player 1 for table-play">
+          <i data-lucide="arrow-up-down" class="w-3.5 h-3.5"></i>
+          <span class="hidden md:inline">F2F Mode</span>
+        </button>
       </div>
 
       <!-- Header Controls -->
       <div class="flex items-center gap-2">
-        <!-- Face to Face Rotation Button (Widescreen Tablet/Phone focus) -->
-        <button id="header-f2f-btn" onclick="toggleFaceToFace()" class="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-all flex items-center gap-1.5 text-xs font-bold hidden" title="Invert Player 1 for table-play">
-          <i data-lucide="arrow-up-down" class="w-4 h-4"></i>
-          <span class="hidden md:inline">F2F Mode</span>
+        <!-- Quick Undo Button -->
+        <button id="header-undo-btn" onclick="undoLastAction()" class="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-all flex items-center gap-1.5 text-xs font-bold opacity-40 pointer-events-none" disabled title="Undo last change">
+          <i data-lucide="undo" class="w-4 h-4"></i>
+          <span class="hidden md:inline">Undo</span>
         </button>
 
         <button onclick="openLogs()" class="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-all flex items-center gap-1.5 text-xs font-bold" title="View log telemetry">
@@ -481,7 +487,8 @@
       firstPlayer: null,
       players: [],
       logs: [],
-      floaters: {} // Tracks sums of consecutive fast taps
+      floaters: {}, // Tracks sums of consecutive fast taps
+      undoHistory: [] // Deep-copy stack of previous game frames
     };
 
     // Custom dialog modal triggers
@@ -563,10 +570,18 @@
       renderSetupNameInputs();
     }
 
-    // Layout configuration setter (Kept for backwards compatibility)
+    // Layout configuration setter
     function setLayoutStyle(style) {
       state.layoutStyle = style;
       playSynth('click');
+      ['standard', 'sideBySide'].forEach(s => {
+        const btn = document.getElementById(`btn-layout-${s}`);
+        if (s === style) {
+          btn.className = "py-3 px-4 rounded-xl font-bold transition-all duration-200 border flex items-center justify-center gap-2 bg-gradient-to-b from-cyan-500 to-blue-600 text-white border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]";
+        } else {
+          btn.className = "py-3 px-4 rounded-xl font-bold transition-all duration-200 border flex items-center justify-center gap-2 bg-slate-950/60 hover:bg-slate-800/80 text-slate-300 border-slate-800";
+        }
+      });
     }
 
     // Live layout option swapper directly from Header Segmented Buttons
@@ -643,15 +658,15 @@
         }
       }
 
-      // 3. Sync Face-to-Face Header Quick Button
+      // 3. Sync Face-to-Face Header Quick Button (Now on the Left Side)
       const f2fBtn = document.getElementById('header-f2f-btn');
       if (f2fBtn) {
         if (state.playerCount === 2) {
           f2fBtn.classList.remove('hidden');
           if (state.faceToFace) {
-            f2fBtn.className = "p-2 rounded-lg bg-slate-900 border border-cyan-500/50 hover:border-cyan-400 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)] transition-all flex items-center gap-1.5 text-xs font-bold";
+            f2fBtn.className = "p-1 px-2.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1.5 text-cyan-400 bg-slate-900 border border-cyan-500/50 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]";
           } else {
-            f2fBtn.className = "p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-all flex items-center gap-1.5 text-xs font-bold";
+            f2fBtn.className = "p-1 px-2.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1.5 text-slate-400 hover:text-slate-200 bg-slate-900 border border-slate-850 hover:border-slate-700";
           }
         } else {
           f2fBtn.classList.add('hidden');
@@ -677,6 +692,48 @@
     // Keep function reference pointing to master update visuals to prevent reference breaks
     function updateLayoutTogglesDOM() {
       updateLayoutVisuals();
+    }
+
+    // Save deep-copied frame parameters onto undo history array
+    function saveUndoState() {
+      if (!state.undoHistory) state.undoHistory = [];
+      state.undoHistory.push({
+        players: JSON.parse(JSON.stringify(state.players)),
+        phase: state.phase,
+        logs: JSON.parse(JSON.stringify(state.logs))
+      });
+      // Restrict history buffer size limit to prevent memory bloat
+      if (state.undoHistory.length > 30) {
+        state.undoHistory.shift();
+      }
+      updateUndoButtonState();
+    }
+
+    // Revert state variables to preceding parameters
+    function undoLastAction() {
+      if (!state.undoHistory || state.undoHistory.length === 0) return;
+      playSynth('click');
+      const restored = state.undoHistory.pop();
+      state.players = restored.players;
+      state.phase = restored.phase;
+      state.logs = restored.logs;
+
+      rebuildGridUI();
+      updateLogsDOM();
+      updateUndoButtonState();
+    }
+
+    // Direct DOM manipulation of the header undo button states
+    function updateUndoButtonState() {
+      const btn = document.getElementById('header-undo-btn');
+      if (!btn) return;
+      if (state.undoHistory && state.undoHistory.length > 0) {
+        btn.disabled = false;
+        btn.classList.remove('opacity-40', 'pointer-events-none');
+      } else {
+        btn.disabled = true;
+        btn.classList.add('opacity-40', 'pointer-events-none');
+      }
     }
 
     function setStartingAuthority(val) {
@@ -821,6 +878,7 @@
       document.getElementById('control-modal').classList.add('hidden');
     }
 
+    // Change faction
     function changeFaction(playerId, factionId) {
       playSynth('click');
       state.players = state.players.map(p => {
@@ -900,6 +958,9 @@
       // Clear previous state variables
       state.floaters = {};
       state.logs = [];
+      state.undoHistory = []; // Reset undo stack
+      updateUndoButtonState();
+      
       addLog("Skirmish initiated in Sector " + (Math.floor(Math.random() * 900) + 100) + ". Initial authority assigned: " + state.startingAuthority + ".");
 
       // Synchronize Segmented Header Buttons
@@ -956,30 +1017,30 @@
             <div class="absolute inset-0 bg-[linear-gradient(rgba(18,24,38,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(18,24,38,0.15)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none z-0"></div>
 
             <!-- Faction Logo Watermark -->
-            ${faction.svg}
+            \${faction.svg}
 
             <!-- Card Header: Profile Info -->
             <div class="p-3 sm:p-4 flex items-center justify-between z-10 bg-slate-950/40 backdrop-blur-sm border-b border-slate-800/20">
               <div class="flex items-center gap-2 max-w-[60%]">
-                <div class="w-3 h-3 rounded-full ${faction.badgeBg} shadow-sm shrink-0 animate-pulse"></div>
+                <div class="w-3 h-3 rounded-full \${faction.badgeBg} shadow-sm shrink-0 animate-pulse"></div>
                 <input
                   type="text"
-                  value="${player.name}"
-                  onchange="renamePlayer('${player.id}', this.value)"
+                  value="\${player.name}"
+                  onchange="renamePlayer('\${player.id}', this.value)"
                   class="bg-transparent font-bold text-sm tracking-wide text-slate-100 hover:bg-slate-800/50 focus:bg-slate-850 focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded px-1.5 py-0.5 truncate w-full"
                   title="Rename Commander"
                   maxLength="16"
                 />
               </div>
               <span class="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800/60 font-extrabold truncate">
-                ${faction.name}
+                \${faction.name}
               </span>
             </div>
 
             <!-- Card Body: Main Numeric display -->
             <div class="flex-1 flex items-center justify-center relative p-2 z-10">
               <!-- Defeated Panel -->
-              <div id="defeated-${player.id}" class="${isDefeated ? '' : 'hidden'} absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center z-30">
+              <div id="defeated-\${player.id}" class="\${isDefeated ? '' : 'hidden'} absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center z-30">
                 <div class="p-3 bg-red-950/50 border border-red-500/40 rounded-full animate-bounce mb-2 text-red-500">
                   <i data-lucide="shield-alert" class="w-10 h-10"></i>
                 </div>
@@ -990,11 +1051,11 @@
               <!-- Authority indicators -->
               <div class="relative text-center select-none py-4">
                 <!-- Floating score change parent container -->
-                <div id="floater-container-${player.id}" class="absolute -top-6 left-1/2 -translate-x-1/2 w-32 h-12 pointer-events-none select-none"></div>
+                <div id="floater-container-\${player.id}" class="absolute -top-6 left-1/2 -translate-x-1/2 w-32 h-12 pointer-events-none select-none"></div>
 
                 <div class="text-7xl md:text-8xl font-black tracking-tighter tabular-nums drop-shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center justify-center">
-                  <span id="score-${player.id}" class="bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">
-                    ${player.authority}
+                  <span id="score-\${player.id}" class="bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">
+                    \${player.authority}
                   </span>
                 </div>
                 <p class="text-[9px] uppercase font-bold tracking-[0.2em] opacity-60 text-slate-400 mt-1">Mothership Authority</p>
@@ -1006,19 +1067,19 @@
               <!-- Outgoing Damage Options (Minus Values) -->
               <div class="grid grid-cols-3 gap-2 sm:gap-3">
                 <button
-                  onclick="modifyAuthority('${player.id}', -10)"
+                  onclick="modifyAuthority('\${player.id}', -10)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-red-950/40 hover:bg-red-900/50 border border-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
                 >
                   -10
                 </button>
                 <button
-                  onclick="modifyAuthority('${player.id}', -5)"
+                  onclick="modifyAuthority('\${player.id}', -5)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-red-950/40 hover:bg-red-900/50 border border-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
                 >
                   -5
                 </button>
                 <button
-                  onclick="modifyAuthority('${player.id}', -1)"
+                  onclick="modifyAuthority('\${player.id}', -1)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-red-950/40 hover:bg-red-900/50 border border-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
                 >
                   -1
@@ -1028,19 +1089,19 @@
               <!-- Incoming Repair Options (Positive values) -->
               <div class="grid grid-cols-3 gap-2 sm:gap-3">
                 <button
-                  onclick="modifyAuthority('${player.id}', 1)"
+                  onclick="modifyAuthority('\${player.id}', 1)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
                 >
                   +1
                 </button>
                 <button
-                  onclick="modifyAuthority('${player.id}', 5)"
+                  onclick="modifyAuthority('\${player.id}', 5)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
                 >
                   +5
                 </button>
                 <button
-                  onclick="modifyAuthority('${player.id}', 10)"
+                  onclick="modifyAuthority('\${player.id}', 10)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
                 >
                   +10
@@ -1057,7 +1118,7 @@
     function renamePlayer(playerId, newName) {
       state.players = state.players.map(p => {
         if (p.id === playerId) {
-          const refined = newName.trim() || `Commander ${playerId.split('-')[1]}`;
+          const refined = newName.trim() || `Commander \${playerId.split('-')[1]}`;
           addLog("Commander in " + FACTIONS[p.factionId].name + " renamed to \"" + refined + "\"");
           return { ...p, name: refined };
         }
@@ -1073,6 +1134,9 @@
     // Incremental Combat Modification Controller
     function modifyAuthority(playerId, change) {
       if (state.phase !== 'playing') return;
+
+      // Save deep copy backup state to enable instant undo
+      saveUndoState();
 
       // Select audio pitch theme
       const actionType = change > 0 ? 'heal' : 'damage';
@@ -1100,10 +1164,10 @@
           }
 
           // Direct DOM adjustments to optimize score frame performance
-          document.getElementById(`score-${p.id}`).innerText = nextScore;
+          document.getElementById(`score-\${p.id}`).innerText = nextScore;
           
-          const card = document.getElementById(`card-${p.id}`);
-          const defeatedPanel = document.getElementById(`defeated-${p.id}`);
+          const card = document.getElementById(`card-\${p.id}`);
+          const defeatedPanel = document.getElementById(`defeated-\${p.id}`);
           if (isDefeated) {
             card.classList.add('opacity-40', 'scale-[0.98]');
             defeatedPanel.classList.remove('hidden');
@@ -1123,7 +1187,7 @@
 
     // Trigger accumulating floaters above score digits
     function triggerFloater(player, amount) {
-      const container = document.getElementById(`floater-container-${player.id}`);
+      const container = document.getElementById(`floater-container-\${player.id}`);
       if (!container) return;
 
       // Accumulate rapidly inputted scores to prevent rendering block overlap
@@ -1137,10 +1201,10 @@
       // Construct dynamic visual element
       const el = document.createElement('div');
       const isPositive = nextSum >= 0;
-      el.className = `absolute left-1/2 -translate-x-1/2 font-black text-3xl tracking-wide select-none pointer-events-none drop-shadow-[0_0_12px_rgba(255,255,255,0.45)] animate-floatUp ${
+      el.className = `absolute left-1/2 -translate-x-1/2 font-black text-3xl tracking-wide select-none pointer-events-none drop-shadow-[0_0_12px_rgba(255,255,255,0.45)] animate-floatUp \${
         isPositive ? 'text-emerald-400' : 'text-red-500'
       }`;
-      el.innerText = `${isPositive ? '+' : ''}${nextSum}`;
+      el.innerText = `\${isPositive ? '+' : ''}\${nextSum}`;
       container.appendChild(el);
 
       // Erase tracking log after animation duration finishes
