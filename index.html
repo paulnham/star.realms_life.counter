@@ -804,6 +804,7 @@
       updateLogsDOM();
     }
 
+    // Update Logs DOM
     function updateLogsDOM() {
       const container = document.getElementById('log-content');
       if (!container) return;
@@ -1020,30 +1021,30 @@
             <div class="absolute inset-0 bg-[linear-gradient(rgba(18,24,38,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(18,24,38,0.15)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none z-0"></div>
 
             <!-- Faction Logo Watermark -->
-            \${faction.svg}
+            ${faction.svg}
 
             <!-- Card Header: Profile Info -->
             <div class="p-3 sm:p-4 flex items-center justify-between z-10 bg-slate-950/40 backdrop-blur-sm border-b border-slate-800/20">
               <div class="flex items-center gap-2 max-w-[60%]">
-                <div class="w-3 h-3 rounded-full \${faction.badgeBg} shadow-sm shrink-0 animate-pulse"></div>
+                <div class="w-3 h-3 rounded-full ${faction.badgeBg} shadow-sm shrink-0 animate-pulse"></div>
                 <input
                   type="text"
-                  value="\${player.name}"
-                  onchange="renamePlayer('\${player.id}', this.value)"
+                  value="${player.name}"
+                  onchange="renamePlayer('${player.id}', this.value)"
                   class="bg-transparent font-bold text-sm tracking-wide text-slate-100 hover:bg-slate-800/50 focus:bg-slate-850 focus:outline-none focus:ring-1 focus:ring-cyan-500 rounded px-1.5 py-0.5 truncate w-full"
                   title="Rename Commander"
                   maxLength="16"
                 />
               </div>
               <span class="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800/60 font-extrabold truncate">
-                \${faction.name}
+                ${faction.name}
               </span>
             </div>
 
             <!-- Card Body: Main Numeric display -->
             <div class="flex-1 flex items-center justify-center relative p-2 z-10">
               <!-- Defeated Panel -->
-              <div id="defeated-\${player.id}" class="\${isDefeated ? '' : 'hidden'} absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center z-30">
+              <div id="defeated-${player.id}" class="${isDefeated ? '' : 'hidden'} absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center z-30">
                 <div class="p-3 bg-red-950/50 border border-red-500/40 rounded-full animate-bounce mb-2 text-red-500">
                   <i data-lucide="shield-alert" class="w-10 h-10"></i>
                 </div>
@@ -1054,11 +1055,11 @@
               <!-- Authority indicators -->
               <div class="relative text-center select-none py-4">
                 <!-- Floating score change parent container -->
-                <div id="floater-container-\${player.id}" class="absolute -top-6 left-1/2 -translate-x-1/2 w-32 h-12 pointer-events-none select-none"></div>
+                <div id="floater-container-${player.id}" class="absolute -top-6 left-1/2 -translate-x-1/2 w-32 h-12 pointer-events-none select-none"></div>
 
                 <div class="text-7xl md:text-8xl font-black tracking-tighter tabular-nums drop-shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center justify-center">
-                  <span id="score-\${player.id}" class="bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">
-                    \${player.authority}
+                  <span id="score-${player.id}" class="bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">
+                    ${player.authority}
                   </span>
                 </div>
                 <p class="text-[9px] uppercase font-bold tracking-[0.2em] opacity-60 text-slate-400 mt-1">Mothership Authority</p>
@@ -1070,19 +1071,19 @@
               <!-- Outgoing Damage Options (Minus Values) -->
               <div class="grid grid-cols-3 gap-2 sm:gap-3">
                 <button
-                  onclick="modifyAuthority('\${player.id}', -10)"
+                  onclick="modifyAuthority('${player.id}', -10)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-red-950/40 hover:bg-red-900/50 border border-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
                 >
                   -10
                 </button>
                 <button
-                  onclick="modifyAuthority('\${player.id}', -5)"
+                  onclick="modifyAuthority('${player.id}', -5)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-red-950/40 hover:bg-red-900/50 border border-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
                 >
                   -5
                 </button>
                 <button
-                  onclick="modifyAuthority('\${player.id}', -1)"
+                  onclick="modifyAuthority('${player.id}', -1)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-red-950/40 hover:bg-red-900/50 border border-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
                 >
                   -1
@@ -1092,19 +1093,19 @@
               <!-- Incoming Repair Options (Positive values) -->
               <div class="grid grid-cols-3 gap-2 sm:gap-3">
                 <button
-                  onclick="modifyAuthority('\${player.id}', 1)"
+                  onclick="modifyAuthority('${player.id}', 1)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
                 >
                   +1
                 </button>
                 <button
-                  onclick="modifyAuthority('\${player.id}', 5)"
+                  onclick="modifyAuthority('${player.id}', 5)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
                 >
                   +5
                 </button>
                 <button
-                  onclick="modifyAuthority('\${player.id}', 10)"
+                  onclick="modifyAuthority('${player.id}', 10)"
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
                 >
                   +10
@@ -1121,7 +1122,7 @@
     function renamePlayer(playerId, newName) {
       state.players = state.players.map(p => {
         if (p.id === playerId) {
-          const refined = newName.trim() || `Commander \${playerId.split('-')[1]}`;
+          const refined = newName.trim() || `Commander ${playerId.split('-')[1]}`;
           addLog("Commander in " + FACTIONS[p.factionId].name + " renamed to \"" + refined + "\"");
           return { ...p, name: refined };
         }
@@ -1167,10 +1168,10 @@
           }
 
           // Direct DOM adjustments to optimize score frame performance
-          document.getElementById(`score-\${p.id}`).innerText = nextScore;
+          document.getElementById(`score-${p.id}`).innerText = nextScore;
           
-          const card = document.getElementById(`card-\${p.id}`);
-          const defeatedPanel = document.getElementById(`defeated-\${p.id}`);
+          const card = document.getElementById(`card-${p.id}`);
+          const defeatedPanel = document.getElementById(`defeated-${p.id}`);
           if (isDefeated) {
             card.classList.add('opacity-40', 'scale-[0.98]');
             defeatedPanel.classList.remove('hidden');
@@ -1190,7 +1191,7 @@
 
     // Trigger accumulating floaters above score digits
     function triggerFloater(player, amount) {
-      const container = document.getElementById(`floater-container-\${player.id}`);
+      const container = document.getElementById(`floater-container-${player.id}`);
       if (!container) return;
 
       // Accumulate rapidly inputted scores to prevent rendering block overlap
@@ -1204,10 +1205,10 @@
       // Construct dynamic visual element
       const el = document.createElement('div');
       const isPositive = nextSum >= 0;
-      el.className = `absolute left-1/2 -translate-x-1/2 font-black text-3xl tracking-wide select-none pointer-events-none drop-shadow-[0_0_12px_rgba(255,255,255,0.45)] animate-floatUp \${
+      el.className = `absolute left-1/2 -translate-x-1/2 font-black text-3xl tracking-wide select-none pointer-events-none drop-shadow-[0_0_12px_rgba(255,255,255,0.45)] animate-floatUp ${
         isPositive ? 'text-emerald-400' : 'text-red-500'
       }`;
-      el.innerText = `\${isPositive ? '+' : ''}\${nextSum}`;
+      el.innerText = `${isPositive ? '+' : ''}${nextSum}`;
       container.appendChild(el);
 
       // Erase tracking log after animation duration finishes
