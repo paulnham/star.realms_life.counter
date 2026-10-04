@@ -548,6 +548,18 @@
       document.getElementById('combat-screen').addEventListener('dblclick', (event) => {
         event.preventDefault();
       });
+
+      // On mobile Safari, a quick sequence of touches can still be interpreted
+      // as a viewport zoom. Handle life-control taps directly so every touch
+      // adjusts authority once and never becomes a browser gesture.
+      document.getElementById('combat-screen').addEventListener('touchend', (event) => {
+        const adjustmentButton = event.target.closest('[data-life-adjustment]');
+        const scoreDisplay = event.target.closest('[data-life-score]');
+        if (!adjustmentButton && !scoreDisplay) return;
+
+        event.preventDefault();
+        if (adjustmentButton) adjustmentButton.click();
+      }, { passive: false });
     });
 
     // Populate Optional Player name input layout based on active pilot size settings
@@ -1087,7 +1099,7 @@
                 <div id="floater-container-${player.id}" class="absolute -top-6 left-1/2 -translate-x-1/2 w-32 h-12 pointer-events-none select-none"></div>
 
                 <div class="text-7xl md:text-8xl font-black tracking-tighter tabular-nums drop-shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center justify-center">
-                  <span id="score-${player.id}" class="bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">
+                  <span id="score-${player.id}" data-life-score class="bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">
                     ${player.authority}
                   </span>
                 </div>
@@ -1101,18 +1113,21 @@
               <div class="grid grid-cols-3 gap-2 sm:gap-3">
                 <button
                   onclick="modifyAuthority('${player.id}', -10)"
+                  data-life-adjustment
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-red-950/40 hover:bg-red-900/50 border border-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
                 >
                   -10
                 </button>
                 <button
                   onclick="modifyAuthority('${player.id}', -5)"
+                  data-life-adjustment
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-red-950/40 hover:bg-red-900/50 border border-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
                 >
                   -5
                 </button>
                 <button
                   onclick="modifyAuthority('${player.id}', -1)"
+                  data-life-adjustment
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-red-950/40 hover:bg-red-900/50 border border-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-red-400"
                 >
                   -1
@@ -1123,18 +1138,21 @@
               <div class="grid grid-cols-3 gap-2 sm:gap-3">
                 <button
                   onclick="modifyAuthority('${player.id}', 1)"
+                  data-life-adjustment
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
                 >
                   +1
                 </button>
                 <button
                   onclick="modifyAuthority('${player.id}', 5)"
+                  data-life-adjustment
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
                 >
                   +5
                 </button>
                 <button
                   onclick="modifyAuthority('${player.id}', 10)"
+                  data-life-adjustment
                   class="py-3.5 sm:py-5 lg:py-6 rounded-xl font-black text-sm sm:text-lg lg:text-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-0.5 text-emerald-400"
                 >
                   +10
