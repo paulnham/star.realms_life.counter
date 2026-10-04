@@ -58,6 +58,75 @@
         grid-auto-rows: minmax(22rem, auto);
       }
     }
+
+    /* Landscape phones become a tabletop board: controls occupy a compact
+       rail and the two player panels use the full remaining viewport. */
+    @media (orientation: landscape) and (max-height: 600px) {
+      body {
+        overflow: hidden !important;
+      }
+
+      #combat-screen {
+        height: 100dvh !important;
+        min-height: 0;
+        flex-direction: row;
+        overflow: hidden !important;
+      }
+
+      #combat-header {
+        width: 4.5rem;
+        align-self: stretch;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        padding: calc(env(safe-area-inset-top) + 0.5rem) 0.5rem calc(env(safe-area-inset-bottom) + 0.5rem);
+        overflow-y: auto;
+      }
+
+      #header-primary-actions,
+      #header-utility-actions {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+
+      #combat-status {
+        display: none;
+      }
+
+      #header-layout-switch,
+      #header-f2f-wrapper,
+      #header-utility-actions > button {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #header-layout-switch button,
+      #header-f2f-btn,
+      #header-utility-actions > button {
+        justify-content: center;
+        padding: 0.55rem;
+      }
+
+      #players-grid {
+        flex: 1 !important;
+        min-width: 0;
+        min-height: 0;
+        height: auto !important;
+        overflow: hidden !important;
+      }
+
+      #players-grid[data-player-count="2"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        grid-template-rows: minmax(0, 1fr) !important;
+      }
+
+      #players-grid [data-life-adjustment] {
+        min-height: 2.75rem;
+        padding-top: 0.45rem;
+        padding-bottom: 0.45rem;
+      }
+    }
     .hud-title {
       font-family: 'Orbitron', sans-serif;
     }
@@ -233,13 +302,13 @@
   <!-- ACTIVE COMBAT PHASE SCREEN -->
   <div id="combat-screen" class="hidden flex-1 z-10 flex flex-col min-h-screen md:h-screen md:overflow-hidden">
     <!-- Tactical Header -->
-    <header class="px-2 sm:px-4 py-2 bg-slate-950/80 border-b border-slate-800/80 backdrop-blur-md flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 z-20 shrink-0">
-      <div class="flex min-w-0 items-center gap-1.5 sm:gap-2">
+    <header id="combat-header" class="px-2 sm:px-4 py-2 bg-slate-950/80 border-b border-slate-800/80 backdrop-blur-md flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 z-20 shrink-0">
+      <div id="header-primary-actions" class="flex min-w-0 items-center gap-1.5 sm:gap-2">
         <span class="text-xs font-black tracking-widest text-slate-400 uppercase hidden sm:inline hud-title">Star Realms</span>
-        <span class="px-1.5 py-0.5 text-[9px] font-black uppercase rounded bg-slate-900 text-cyan-400 border border-cyan-500/20 tracking-wider">Combat Matrix active</span>
+        <span id="combat-status" class="px-1.5 py-0.5 text-[9px] font-black uppercase rounded bg-slate-900 text-cyan-400 border border-cyan-500/20 tracking-wider">Combat Matrix active</span>
         
         <!-- Live Layout Quick Action Toggle -->
-        <div class="flex items-center bg-slate-900 rounded-lg p-0.5 border border-slate-850 ml-1.5 shrink-0">
+        <div id="header-layout-switch" class="flex items-center bg-slate-900 rounded-lg p-0.5 border border-slate-850 ml-1.5 shrink-0">
           <button onclick="setLayoutStyleLive('standard')" id="header-btn-layout-standard" class="p-1 px-2 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 text-cyan-400 bg-slate-950 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]">
             <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
             <span class="hidden md:inline">Grid View</span>
@@ -260,7 +329,7 @@
       </div>
 
       <!-- Header Controls -->
-      <div class="flex items-center gap-1.5 sm:gap-2">
+      <div id="header-utility-actions" class="flex items-center gap-1.5 sm:gap-2">
         <!-- Quick Undo Button -->
         <button id="header-undo-btn" onclick="undoLastAction()" class="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-all flex items-center gap-1.5 text-xs font-bold opacity-40 pointer-events-none" disabled title="Undo last change">
           <i data-lucide="undo" class="w-4 h-4"></i>
@@ -881,10 +950,18 @@
         let textStyle = "text-slate-300";
         if (log.text.includes('🏆')) textStyle = "border-yellow-500/30 bg-yellow-500/5 text-yellow-300 font-bold";
         else if (log.text.includes('💥')) textStyle = "border-red-500/30 bg-red-500/5 text-red-400 font-bold animate-pulse";
+
+        const adjustment = log.text.match(/(adjusted authority by )([+-]\d+)/);
+        const displayText = adjustment
+          ? log.text.replace(
+              adjustment[0],
+              `${adjustment[1]}<span class="${adjustment[2].startsWith('+') ? 'text-emerald-400' : 'text-red-400'} font-black">${adjustment[2]}</span>`
+            )
+          : log.text;
         
         return `<div class="p-2.5 rounded border border-slate-800/40 bg-slate-900/60 flex gap-2.5 items-start ${textStyle}">
                   <span class="text-cyan-500/70 font-bold select-none shrink-0">${log.time}</span>
-                  <span class="leading-relaxed">${log.text}</span>
+                  <span class="leading-relaxed">${displayText}</span>
                 </div>`;
       }).join('');
     }
@@ -893,6 +970,16 @@
       playSynth('click');
       updateLogsDOM();
       document.getElementById('log-modal').classList.remove('hidden');
+    }
+
+    // Clear telemetry records and their undo snapshots so wiped entries cannot
+    // reappear through an unrelated authority undo action.
+    function clearLogs() {
+      playSynth('click');
+      state.logs = [];
+      state.undoHistory = [];
+      updateUndoButtonState();
+      updateLogsDOM();
     }
 
     // Modal: Control Center
@@ -1044,6 +1131,7 @@
 
     function rebuildGridUI() {
       const grid = document.getElementById('players-grid');
+      grid.dataset.playerCount = state.playerCount;
       
       // Select appropriate CSS grid layout classes
       grid.className = "flex-1 min-h-0 grid gap-2 p-2 overflow-hidden ";
