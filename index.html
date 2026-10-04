@@ -1362,10 +1362,15 @@
       const container = document.getElementById(`floater-container-${player.id}`);
       if (!container) return;
 
-      // Accumulate rapidly inputted scores to prevent rendering block overlap
-      let currentVal = state.floaters[player.id]?.amount || 0;
-      let nextSum = currentVal + amount;
-      state.floaters[player.id] = { amount: nextSum };
+      // Accumulate rapid adjustments into one visible delta. Preserve and
+      // restart the existing timeout so an older tap cannot clear a newer sum.
+      const previousFloater = state.floaters[player.id];
+      const currentVal = previousFloater?.amount || 0;
+      const nextSum = currentVal + amount;
+      if (previousFloater?.timeout) {
+        clearTimeout(previousFloater.timeout);
+      }
+      state.floaters[player.id] = { amount: nextSum, timeout: null };
 
       // Erase previous floater child nodes
       container.innerHTML = "";
@@ -1379,15 +1384,13 @@
       el.innerText = `${isPositive ? '+' : ''}${nextSum}`;
       container.appendChild(el);
 
-      // Erase tracking log after animation duration finishes
-      if (state.floaters[player.id]?.timeout) {
-        clearTimeout(state.floaters[player.id].timeout);
-      }
-
-      state.floaters[player.id].timeout = setTimeout(() => {
+      // Clear only the currently displayed sum after tapping pauses.
+      const timeout = setTimeout(() => {
+        if (state.floaters[player.id]?.timeout !== timeout) return;
         delete state.floaters[player.id];
         el.remove();
       }, 1400);
+      state.floaters[player.id].timeout = timeout;
     }
 
     // Global outcome victory validator
