@@ -31,6 +31,12 @@
     textarea {
       touch-action: manipulation;
     }
+
+    /* The game surface is tapped repeatedly during play.  Treat consecutive
+       taps as game input rather than a browser zoom gesture. */
+    #combat-screen {
+      touch-action: manipulation;
+    }
     .hud-title {
       font-family: 'Orbitron', sans-serif;
     }
@@ -536,6 +542,12 @@
     window.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
       renderSetupNameInputs();
+
+      // Safari can still dispatch a double-click on the score display after
+      // rapid taps. Prevent its default page-zoom behavior within gameplay.
+      document.getElementById('combat-screen').addEventListener('dblclick', (event) => {
+        event.preventDefault();
+      });
     });
 
     // Populate Optional Player name input layout based on active pilot size settings
