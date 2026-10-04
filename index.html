@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Star Realms Life Counter</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -32,10 +32,10 @@
       touch-action: manipulation;
     }
 
-    /* The game surface is tapped repeatedly during play.  Treat consecutive
-       taps as game input rather than a browser zoom gesture. */
+    /* The game surface is tapped repeatedly during play. Disable native
+       browser gestures here so every rapid tap stays a game interaction. */
     #combat-screen {
-      touch-action: manipulation;
+      touch-action: none;
     }
     .hud-title {
       font-family: 'Orbitron', sans-serif;
