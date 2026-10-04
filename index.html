@@ -61,7 +61,7 @@
 
     /* Landscape phones become a tabletop board: controls occupy a compact
        rail and the two player panels use the full remaining viewport. */
-    @media (orientation: landscape) and (max-height: 600px) {
+    @media (min-width: 640px) and (max-width: 1400px) and (max-height: 700px) {
       body {
         overflow: hidden !important;
       }
@@ -132,6 +132,16 @@
     }
     .mono-tech {
       font-family: 'Share Tech Mono', monospace;
+    }
+
+    /* Scores and rapid-change indicators must never collapse or wrap when
+       authority reaches two or three digits. */
+    .score-value,
+    .authority-delta {
+      display: inline-block;
+      min-width: 3ch;
+      white-space: nowrap;
+      line-height: 1;
     }
     
     /* Custom floating delta animation */
@@ -1210,7 +1220,7 @@
                 <div id="floater-container-${player.id}" class="absolute -top-6 left-1/2 -translate-x-1/2 w-32 h-12 pointer-events-none select-none"></div>
 
                 <div class="text-7xl md:text-8xl font-black tracking-tighter tabular-nums drop-shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center justify-center">
-                  <span id="score-${player.id}" data-life-score class="bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">
+                  <span id="score-${player.id}" data-life-score class="score-value bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">
                     ${player.authority}
                   </span>
                 </div>
@@ -1363,7 +1373,7 @@
       // Construct dynamic visual element
       const el = document.createElement('div');
       const isPositive = nextSum >= 0;
-      el.className = `absolute left-1/2 -translate-x-1/2 font-black text-3xl tracking-wide select-none pointer-events-none drop-shadow-[0_0_12px_rgba(255,255,255,0.45)] animate-floatUp ${
+      el.className = `authority-delta absolute left-1/2 -translate-x-1/2 font-black text-3xl tracking-wide text-center select-none pointer-events-none drop-shadow-[0_0_12px_rgba(255,255,255,0.45)] animate-floatUp ${
         isPositive ? 'text-emerald-400' : 'text-red-500'
       }`;
       el.innerText = `${isPositive ? '+' : ''}${nextSum}`;
